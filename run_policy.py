@@ -38,7 +38,7 @@ class Robot():
         return a, mu
 
     def execute_action(self, action):
-        task = ['I', action]
+        task = ['I', action, 0.01]
         send(self.goodPorts, task)
 
     def closeAll(self):
