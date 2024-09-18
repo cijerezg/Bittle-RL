@@ -92,3 +92,4 @@ class Policy(nn.Module):
         sample = density.rsample()
         sample = self.action_range * torch.tanh(sample / self.action_range)
 
+        return sample, density, mu, std
