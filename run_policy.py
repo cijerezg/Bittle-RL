@@ -1,5 +1,5 @@
 from picamera2 import Picamera2
-import V53L0X # dist sensor
+import VL53L0X # dist sensor
 import time
 from ardSerial import *
 
