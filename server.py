@@ -20,7 +20,7 @@ def main():
     return val
 
 if __name__ = "__main__":
-    main()
+    val = main()
     
   
   
