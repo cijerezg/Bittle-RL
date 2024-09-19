@@ -7,6 +7,34 @@ LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
 
+class SelfAttentionLayer(nn.Module):
+    def __init__(self, feature_size):
+        super(SelfAttentionLayer, self).__init__()
+        self.feature_size = feature_size
+
+        # Linear transformations for Q, K, V from the same source
+        self.key = nn.Linear(feature_size, feature_size)
+        self.query = nn.Linear(feature_size, feature_size)
+        self.value = nn.Linear(feature_size, feature_size)
+
+    def forward(self, x):
+        # Apply linear transformations
+        keys = self.key(x)
+        queries = self.query(x)
+        values = self.value(x)
+
+        # Scaled dot-product attention
+        scores = torch.matmul(queries, keys.transpose(-2, -1)) / torch.sqrt(torch.tensor(self.feature_size, dtype=torch.float32))
+
+        # Apply softmax
+        attention_weights = F.softmax(scores, dim=-1)
+
+        # Multiply weights with values
+        output = torch.matmul(attention_weights, values)
+
+        return output, attention_weights
+
+
 class Critic(nn.Module):
     def __init__(self, im_size, hidden_dim=256):
         super().__init__()
@@ -20,6 +48,8 @@ class Critic(nn.Module):
         self.embed_dist = nn.Linear(1, hidden_dim)
         
         self.embed_action = nn.Linear(9, hidden_dim) # There are 9 servos
+
+        self.attention1 = Self
 
         self.layer1 = nn.Linear(hidden_dim, hidden_dim)
         self.layer2 = nn.Linear(hidden_dim, hidden_dim)
