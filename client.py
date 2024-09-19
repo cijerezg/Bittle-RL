@@ -16,7 +16,7 @@ def main(policy):
     
     image = bittle.capture_image()
     dist = bittle.compute_distance()
-    action = policy(action, image, dist)
+    #action = policy(action, image, dist)
 
     bittle.execute_action(action)
     
