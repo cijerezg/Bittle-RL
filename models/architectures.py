@@ -1,7 +1,12 @@
+import sys
+sys.path.insert(0, '../')
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
+from utils.helpers import LimitedQueue
+
 
 LOG_STD_MAX = 2
 LOG_STD_MIN = -20
@@ -9,7 +14,7 @@ LOG_STD_MIN = -20
 
 
 class Critic(nn.Module):
-    def __init__(self, im_size, hidden_dim=256):
+    def __init__(self, hidden_dim=256):
         super().__init__()
 
         
@@ -100,3 +105,13 @@ class Policy(nn.Module):
         sample = self.action_range * torch.tanh(sample / self.action_range)
 
         return sample, density, mu, std
+
+
+model = Critic()
+
+images = torch.rand(10, 4, 480, 380, 4)
+joints = torch.rand(10, 4, 8)
+dist = torch.rand(10, 4, 1)
+action = torch.rand(10, 4, 8, 8)
+
+val = model(image, joints, dist, action)
