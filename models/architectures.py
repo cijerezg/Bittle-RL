@@ -12,6 +12,19 @@ LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
 
+class PositionalEncoding(nn.Module):
+    def __init__(self, dim_model, max_len=32):
+        super().__init__()
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, dim_model, 2) * (-math.log(10000.0) / dim_model))
+        self.pe = torch.zeros(max_len, 1, dim_model)
+        self.pe[:, 0, 0::2] = torch.sin(position * div_term)
+        self.pe[:, 0, 1::2] = torch.cos(position * div_term)
+        
+    def forward(self, x):
+        return x + self.pe[:x.size(0)]
+
+
 
 class Critic(nn.Module):
     def __init__(self, hidden_dim=256):
@@ -32,6 +45,8 @@ class Critic(nn.Module):
         self.keys = nn.Linear(hidden_dim, hidden_dim)
         self.queries = nn.Linear(hidden_dim, hidden_dim)
         self.values = nn.Linear(hidden_dim, hidden_dim)
+
+        self.positional_encoding = PositionalEncoding(dim_model=hidden_dim)
 
         self.attention = nn.MultiheadAttention(hidden_dim, 8)
 
