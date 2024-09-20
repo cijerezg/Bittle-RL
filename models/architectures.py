@@ -32,13 +32,14 @@ class Critic(nn.Module):
 
         
         self.embed_im = nn.Conv2d(4, 64, 5, stride=5, dilation=2)
-        self.embed_im_deep = nn.ModuleList([nn.Conv2d(64, 64, 5, stride=5, dilation=2)] * 6) # 6 conv layers
-        self.embed_im_linear = nn.Linear(-1, hidden_dim) # need to calculate dimension here
+        self.embed_im_deep = nn.ModuleList([nn.Conv2d(64, 64, 5, stride=2)] * 5) # 6 conv layers
+        self.embed_im_out = nn.Conv2d(64, 4, 5)
+        self.embed_im_linear = nn.Linear(336, hidden_dim) # need to calculate dimension here
         
-        self.embed_joints = nn.Linear(9, hidden_dim) # Joints are the servos
+        self.embed_joints = nn.Linear(8, hidden_dim) # Joints are the servos
         self.embed_dist = nn.Linear(1, hidden_dim)
         
-        self.embed_action = nn.Linear(9, hidden_dim) # There are 9 servos
+        self.embed_action = nn.Linear(8, hidden_dim) # There are 9 servos (1 is the head and it is unused)
         self.action_attention = nn.MultiheadAttention(hidden_dim, 8)
         self.layer1_action = nn.Linear(-1, hidden_dim)
 
@@ -58,12 +59,15 @@ class Critic(nn.Module):
     def forward(self, image, joints, dist, action):
         im = self.embed1_im(image)
         for conv_layer in self.embed_im_deep:
-            im = conv_layer(im)
-        pdb.set_trace()
+            im = F.relu(conv_layer(im))
+        im = self.embed_im_out(im)
 
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
+
         action = self.embed_action(action)
+
+
 
         state = im + joints + dist + action
 
@@ -124,7 +128,7 @@ class Policy(nn.Module):
 
 model = Critic()
 
-images = torch.rand(10, 4, 480, 380, 4)
+images = torch.rand(10, 4, 480, 640, 4)
 joints = torch.rand(10, 4, 8)
 dist = torch.rand(10, 4, 1)
 action = torch.rand(10, 4, 8, 8)
