@@ -13,7 +13,7 @@ LOG_STD_MIN = -20
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, dim_model, max_len=32):
+    def __init__(self, d_model, max_len=32):
         super().__init__()
         position = torch.arange(max_len).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, dim_model, 2) * (-math.log(10000.0) / dim_model))
@@ -25,21 +25,56 @@ class PositionalEncoding(nn.Module):
         return x + self.pe[:x.size(0)]
 
 
+class AttentionBlock(nn.Module):
+    def __init__(self, d_model=128, n_heads=8, dim_feedforward=128):
+        self.pos_enc = PositionalEncoding(d_model)
+
+        self.queries = nn.Linear(d_model, d_model)
+        self.keys = nn.Linear(d_model, d_model)
+        self.values = nn.Linear(d_model, d_model)
+
+        self.attention_layer = nn.MultiheadAttention(embed_dim=d_model, nheads=n_heads, batch_first=True)
+        self.layernorm = nn.LayerNorm(d_model)
+
+        self.feed_forward = nn.Linear(d_model, 32)
+
+    def forward(self, x):
+        x = x + self.pos_enc(x)
+
+        Q = self.queries(x)
+        K = self.keys(x)
+        V = self.values(x)
+
+        out, att_weights = self.attention_layer(Q, K, V)
+
+        out = self.layernorm(out + x)
+        out = self.feed_forward(out)
+
+        return out, att_weights
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_ch, hidden_ch, length, embed_dim):
+        # TO DO
+
+
 
 class Critic(nn.Module):
     def __init__(self, hidden_dim=256):
         super().__init__()
 
-        
+        # Image
         self.embed_im = nn.Conv2d(4, 64, 5, stride=5, dilation=2)
         self.embed_im_deep = nn.ModuleList([nn.Conv2d(64, 64, 5, stride=2)] * 5) # 6 conv layers
         self.embed_im_out = nn.Conv2d(64, 4, 5)
         self.embed_im_linear = nn.Linear(336, hidden_dim) # need to calculate dimension here
         
+        # Joints and distance
         self.embed_joints = nn.Linear(8, hidden_dim) # Joints are the servos
         self.embed_dist = nn.Linear(1, hidden_dim)
         
+        # Actions
         self.embed_action = nn.Linear(8, hidden_dim) # There are 9 servos (1 is the head and it is unused)
+        
         self.action_attention = nn.MultiheadAttention(hidden_dim, 8)
         self.layer1_action = nn.Linear(-1, hidden_dim)
 
@@ -57,13 +92,20 @@ class Critic(nn.Module):
         self.out = nn.Linear(hidden_dim, 1)
 
     def forward(self, image, joints, dist, action):
+        a, b, c, d, e = image.shape
+        image = image = image.reshape(a * b, c, d, e)
+
         im = self.embed1_im(image)
         for conv_layer in self.embed_im_deep:
             im = F.relu(conv_layer(im))
         im = self.embed_im_out(im)
-
+        im_flat = im.reshape(im.shape[0], -1)
+        im_flat = im_flat.shape(a, b, -1)
+        
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
+
+
 
         action = self.embed_action(action)
 
