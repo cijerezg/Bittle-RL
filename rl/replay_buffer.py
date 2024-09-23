@@ -22,16 +22,10 @@ class ReplayBuffer(hyper_params):
         self.next_z_buf = np.zeros((size, lat_dim), dtype=np.float32)
         self.rew_buf = np.zeros((size, 1), dtype=np.float32)
         self.done_buf = np.zeros((size, 1), dtype=np.float32)
-        self.tracker = np.zeros((size,), dtype=bool)
         self.cum_reward = np.zeros((size, 1), dtype=np.float32)
         self.norm_cum_reward = np.zeros((size, 1), dtype=np.float32)        
         self.ptr, self.size, self.max_size = 0, 0, size
-        self.threshold = 0.0
-
-        self.sampling_ratio = reset_ratio
-        self.env = env
-        self.lat_dim = lat_dim
-
+    
     def add(self, obs, next_obs, z, next_z, rew, done):
         self.obs_buf[self.ptr] = obs
         self.next_obs_buf[self.ptr] = next_obs
@@ -55,11 +49,3 @@ class ReplayBuffer(hyper_params):
                          cum_reward=self.cum_reward[idxs],
                          norm_cum_reward=self.norm_cum_reward[idxs])
         return batch
-
-
-    def update_tracking_buffers(self, ep_reward):
-        last_ep_idx = np.where(self.done_buf[0:self.ptr - 1])[0].max() + 1
-        self.cum_reward[last_ep_idx:self.ptr, :] = ep_reward
-        mean = self.cum_reward[0:self.ptr, :].mean()
-        std = self.cum_reward[0:self.ptr, :].std()
-        self.norm_cum_reward[0:self.ptr, :] = (self.cum_reward[0:self.ptr, :] - mean) / (std + 1e-4)
