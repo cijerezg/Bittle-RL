@@ -27,6 +27,7 @@ class PositionalEncoding(nn.Module):
 
 class AttentionBlock(nn.Module):
     def __init__(self, d_model=128, n_heads=8, dim_feedforward=128):
+        super().__init__()
         self.pos_enc = PositionalEncoding(d_model)
 
         self.queries = nn.Linear(d_model, d_model)
@@ -53,9 +54,32 @@ class AttentionBlock(nn.Module):
         return out, att_weights
 
 class ConvBlock(nn.Module):
-    def __init__(self, in_ch, hidden_ch, length, embed_dim):
-        # TO DO
+    def __init__(
+        self, im_width=640, im_height=480, 
+        in_ch=4, hidden_ch=32, out_ch=4, 
+        filter_size=5, length=4, embed_dim=128, stride=2
+        ):
+        super().__init__()
 
+        self.embed_im = nn.Conv2d(in_ch, hidden_ch, filter_size)
+        self.embed_im_deep = nn.ModuleList([nn.Conv2d(hidden_ch, hidden_ch, filter_size, stride=stride)] * length)
+        self.embed_im_out = nn.Conv2d(hidden_ch, out_ch, filter_size)
+        self.embed_im_linear = nn.Linear(20, embed_dim)
+
+    def forward(self, image):
+        a, b, c, d, e = image.shape
+        image = image.reshape(a * b, c, d, e)
+
+        im = self.embed1_im(image)
+        for conv_layer in self.embed_im_deep:
+            im = F.relu(conv_layer(im))
+        im = F.relu(self.embed_im_out(im))
+        
+        im_flat = im.reshape(im.shape[0], -1)
+        im_flat = im_flat.reshape(a, b, -1)
+
+        im_out = self.embed_im_linear(im_flat)
+        return im_out
 
 
 class Critic(nn.Module):
@@ -63,100 +87,85 @@ class Critic(nn.Module):
         super().__init__()
 
         # Image
-        self.embed_im = nn.Conv2d(4, 64, 5, stride=5, dilation=2)
-        self.embed_im_deep = nn.ModuleList([nn.Conv2d(64, 64, 5, stride=2)] * 5) # 6 conv layers
-        self.embed_im_out = nn.Conv2d(64, 4, 5)
-        self.embed_im_linear = nn.Linear(336, hidden_dim) # need to calculate dimension here
+        self.conv_block = ConvBlock(hidden_ch=64, embed_dim=256) # all other values are default
         
         # Joints and distance
         self.embed_joints = nn.Linear(8, hidden_dim) # Joints are the servos
         self.embed_dist = nn.Linear(1, hidden_dim)
         
         # Actions
-        self.embed_action = nn.Linear(8, hidden_dim) # There are 9 servos (1 is the head and it is unused)
-        
-        self.action_attention = nn.MultiheadAttention(hidden_dim, 8)
-        self.layer1_action = nn.Linear(-1, hidden_dim)
+        self.embed_actions = nn.Linear(8, hidden_dim)
+        self.action_attn_block = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
 
-        self.keys = nn.Linear(hidden_dim, hidden_dim)
-        self.queries = nn.Linear(hidden_dim, hidden_dim)
-        self.values = nn.Linear(hidden_dim, hidden_dim)
+        # Rest of the network
+        self.main_attn_block1 = AttentionBlock(d_model=hidden_dim, n_heads=16, dim_feedforward=hidden_dim)
+        self.main_attn_block2 = AttentionBlock(d_model=hidden_dim, n_heads=16, dim_feedforward=hidden_dim)
 
-        self.positional_encoding = PositionalEncoding(dim_model=hidden_dim)
-
-        self.attention = nn.MultiheadAttention(hidden_dim, 8)
-
-        self.layer1 = nn.Linear(hidden_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, hidden_dim)
-
-        self.out = nn.Linear(hidden_dim, 1)
+        self.deep_linear1 = nn.Linear(20, 128)
+        self.deep_linear2 = nn.Linear(128, 32)
+        self.out_linear = nn.Linear(32, 1)
 
     def forward(self, image, joints, dist, action):
-        a, b, c, d, e = image.shape
-        image = image = image.reshape(a * b, c, d, e)
+        im = self.conv_block(image)
 
-        im = self.embed1_im(image)
-        for conv_layer in self.embed_im_deep:
-            im = F.relu(conv_layer(im))
-        im = self.embed_im_out(im)
-        im_flat = im.reshape(im.shape[0], -1)
-        im_flat = im_flat.shape(a, b, -1)
-        
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
 
+        actions = self.embed_actions(actions)
+        # Run this frame by frame of the action. Might need a for loop
+        actions = self.action_attn_block(actions)
 
+        x = im + joints + dist + actions
 
-        action = self.embed_action(action)
+        x = self.main_attn_block1(x)
+        x = self.main_attn_block2(x)
 
+        x = F.relu(self.deep_linear1(x))
+        x = F.relu(self.deep_linear2(x))
+        x = self.out_linear(x)
 
+        return x
 
-        state = im + joints + dist + action
-
-        x = F.relu(self.layer1(state))
-        x = F.relu(self.layer2(x))
-        x = F.relu(self.layer3(x))
-        x = F.relu(self.layer4(x))
-
-        return self.out(x)
 
 
 class Policy(nn.Module):
-    def __init__(self, im_size, action_range, hidden_dim=128):
+    def __init__(self, action_range=4, frames=8, hidden_dim=128):
         super().__init__()
-        self.action_range = action_range
-        
-        self.embed1_im = nn.Conv2d(4, 64, 3, stride=5, dilation=5)
-        self.embed2_im = nn.Conv2d(64, 64, 3, stride=5, dilation=5)
-        self.embed3_im = nn.Conv2d(64, 64, 3, stride=5, dilation=5)
-        self.embed_im = nn.Linear(-1, hidden_dim) # need to calculate dimension here
 
-        self.embed_joints = nn.Linear(9, hidden_dim)
-        self.embed_dist = nn.Linear(1, hidden_dim)
+        # Image
+        self.conv_block = ConvBlock(hidden_ch=32, embed_dim=hidden_dim)
 
-        self.layer1 = nn.Linear(hidden_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, hidden_dim)
-        self.layer3 = nn.Linear(hidden_dim, hidden_dim)
+        # Joints and distance
+        self.embed_actions = nn.Linear(8, hidden_dim)
+        self.action_attn_block = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
 
-        self.mu = nn.Linear(hidden_dim, 9)
-        self.log_std = nn.Linear(hidden_dim, 9)
-        
+        # Rest of the network
+        self.main_attn_block1 = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
+        self.main_attn_block2 = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
+
+        # Embed to create every action frame
+        self.embed_action_frame = nn.Linear(20, 64) # it is 64 because 8 frames and the action vector is 8 (8 joints)
+        self.act_attn_block1 = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
+        self.act_attn_block2 = AttentionBlock(d_model=hidden_dim, n_heads=8, dim_feedforward=hidden_dim)
+
+        self.mu = nn.Linear(64, 64) # 8 frames and each action vector is 8        
+        self.log_std = nn.Linear(64, 64) # 8 frames and each action vector is 8
+
+        self.action_range = action_range        
 
     def forward(self, image, joints, dist):
-        im = self.embed1_im(image)
-        im = self.embed2_im(im)
-        im = self.embed3_im(im)
-        pdb.set_trace()
+        im = self.conv_block(image)
 
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
-        
-        x= im + joints + dist
 
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        x = F.relu(self.layer3(x))
-        
+        x = im + joints + dist
+        x = self.embed_action_frame(x)
+
+        # need to reshape x correctly
+        x = act_attn_block1(x)
+        x = act_attn_block2(x)
+
         mu = self.mu(x)
         log_std = self.log_std(x)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
