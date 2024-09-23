@@ -26,7 +26,7 @@ class PositionalEncoding(nn.Module):
 
 
 class AttentionBlock(nn.Module):
-    def __init__(self, d_model=128, n_heads=8, dim_feedforward=128):
+    def __init__(self, d_model=128, n_heads=8, out_dim=128):
         super().__init__()
         self.pos_enc = PositionalEncoding(d_model)
 
@@ -37,7 +37,7 @@ class AttentionBlock(nn.Module):
         self.attention_layer = nn.MultiheadAttention(embed_dim=d_model, nheads=n_heads, batch_first=True)
         self.layernorm = nn.LayerNorm(d_model)
 
-        self.feed_forward = nn.Linear(d_model, 32)
+        self.feed_forward = nn.Linear(d_model, out_dim)
 
     def forward(self, x):
         x = x + self.pos_enc(x)
@@ -83,7 +83,7 @@ class ConvBlock(nn.Module):
 
 
 class Critic(nn.Module):
-    def __init__(self, hidden_dim=256):
+    def __init__(self, action_frames=8, hidden_dim=256, action_hidden_dim=64):
         super().__init__()
 
         # Image
@@ -105,6 +105,8 @@ class Critic(nn.Module):
         self.deep_linear2 = nn.Linear(128, 32)
         self.out_linear = nn.Linear(32, 1)
 
+        self.action_frames = action_frames
+
     def forward(self, image, joints, dist, action):
         im = self.conv_block(image)
 
@@ -112,8 +114,8 @@ class Critic(nn.Module):
         dist = self.embed_dist(dist)
 
         actions = self.embed_actions(actions)
-        # Run this frame by frame of the action. Might need a for loop
-        actions = self.action_attn_block(actions)
+        for i in range(self.action_frames):
+            actions[:, i, :, :] = self.action_attn_block(actions[:, i, :, :])
 
         x = im + joints + dist + actions
 
@@ -179,9 +181,10 @@ class Policy(nn.Module):
 
 model = Critic()
 
-images = torch.rand(10, 4, 480, 640, 4)
-joints = torch.rand(10, 4, 8)
-dist = torch.rand(10, 4, 1)
-action = torch.rand(10, 4, 8, 8)
+images = torch.rand(256, 8, 480, 640, 4)
+joints = torch.rand(256, 8, 8)
+dist = torch.rand(256, 8, 1)
+action = torch.rand(256, 8, 8, 8)
+
 
 val = model(image, joints, dist, action)
