@@ -1,12 +1,9 @@
 import torch
 import copy
 from collections import deque, OrderedDict
+import torch.nn as nn
 
-
-def get_params(
-    models
-    names,
-    pretrained_params):
+def get_params(models, names, pretrained_params):
 
     params = OrderedDict()
 
@@ -23,16 +20,29 @@ def get_params(
                 else:
                     init = torch.nn.init.xavier_normal_(param)
                 par[name] = nn.Parameter(init)
+        else:
+            for name, param in model.named_parameters():
+                par[name] = nn.Parameter(init)
 
-                
+        params[name_model] = copy.deepcopy(par)
+
+    return params
 
 
 
+def reset_params(params, keys, optimizers, lr):
+    for key in keys:
+        for name, param in params[key].items():
+            if 'bias' in name:
+                init = torch.nn.init.constant_(param, 0.0)
+            else:
+                init = torch.nn.init.xavier_normal_(param)
+            params[key][name] = nn.Parameter(init)
 
-    for name, param in model.named_parameters():
-        params[name] = nn.Parameter(param)
-    return copy.deepcopy(params)
-        
+        optimizers[key] = Adam(params[key].values(), lr)
+
+    return params, optimizers
+
 
 class LimitedQueue:
     def __init__(self, max_size=4):
