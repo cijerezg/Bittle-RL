@@ -49,3 +49,6 @@ class ReplayBuffer(hyper_params):
                          cum_reward=self.cum_reward[idxs],
                          norm_cum_reward=self.norm_cum_reward[idxs])
         return batch
+
+    def load_saved_data(self):
+        # TO DO
