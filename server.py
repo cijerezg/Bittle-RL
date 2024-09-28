@@ -3,6 +3,8 @@ from rl.agent import BittleRL
 from rl.replay_buffer import ReplayBuffer
 from models.architectures import Policy, Critic
 from rl.agent import Actor
+from utils.helpers import get_transition_from_pi
+from utils.optimizers import reset_params
 import wandb
 import os
 import torch
@@ -39,32 +41,32 @@ config = {
     'load_pretrained_models': False
 }
 
-
-
+    
 
 def main(config=None):
     with wandb.init(project='BittleRL', config=config):
         
         config = wandb.config
 
-        policy = Policy(#enter arguments)
-        critic = Critic(#enter arguments)
-        actor = Actor(#enter arguments)
+        policy = Policy()#enter arguments)
+        critic = Critic()#enter arguments)
+        actor = Actor()#enter arguments)
 
-        experience_buffer = ReplayBuffer(# enter arguments)
+        experience_buffer = ReplayBuffer()# enter arguments)
 
-        bittle_rl = BittleRL(# enter arguments)
+        bittle_rl = BittleRL()# enter arguments)
 
-        models = [# enter arguments]
+        models = []# enter arguments]
 
-        pretrained_models = # enter this
-        names = # enter this
+        pretrained_models = 1# enter this
+        names = 2# enter this
 
         params = get_params(models, pretrained_models)
 
         keys_optimizers = ['Critic', 'Policy']
 
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
+            
 
         # Set up socket communication
         server_address = ('', 12345)
@@ -76,22 +78,19 @@ def main(config=None):
 
         iterations = 0
 
+
         while iterations < config.max_iterations:
+            transition = get_transition_from_pi(conn, addr)
+
+            params = bittle_rl.training_iteration(params, optimizers, transition)
+
+            if iterations % config.reset_frequency == 0:
+                params, optimizers, agent = reset_params
+
+            # send params back to pi
+            iterations += 1
             
-
-
-
-
-    with conn:
-        data = conn.recv(2048)
-        if data:
-            val = data.decode()
-        else:
-            print('No data')
-            val = None
-    
-    return val
-
+            
 if __name__ = "__main__":
     val = main()
     

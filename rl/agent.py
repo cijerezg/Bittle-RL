@@ -34,8 +34,6 @@ class BittleRL():
 
         # Need to define additional params
         # Self max iterations
-
-        self.env = env
         self.experience_buffer = experience_buffer
         self.actor = actor
         self.critic = critic
