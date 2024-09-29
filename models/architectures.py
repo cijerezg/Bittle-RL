@@ -198,11 +198,11 @@ class Policy(nn.Module):
         return sample, density, mu, std
 
 
-#device = torch.device('cpu')
+# device = torch.device('cpu')
     
-#model = Critic(device)
+# model = Critic(device)
 
-#images = torch.rand(1, 8, 240, 320, 4).to(device) # original sizes were 480 ad 640, but that seems too big.
+# images = torch.rand(1, 8, 240, 320, 4).to(device) # original sizes were 480 ad 640, but that seems too big.
 # joints = torch.rand(1, 8, 8).to(device)
 # dist = torch.rand(1, 8, 1).to(device)
 # action = torch.rand(1, 8, 8, 8).to(device)
@@ -218,7 +218,11 @@ class Policy(nn.Module):
 
 
 # params = get_params([model], name, [None])
+
 # pdb.set_trace()
+
+
+
 # now = time.time()
 # val = model(images, joints, dist, action)
 

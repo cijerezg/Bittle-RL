@@ -3,7 +3,7 @@ from run_policy import Robot
 import pickle
 import numpy as np
 from rl.agent import Actor
-from utils.helpers import get_params
+from utils.helpers import get_params, LimitedQueue
 import torch
 import time
 
@@ -27,7 +27,10 @@ def main():
     action.extend(init_joints)
     bittle.execute_action(action)
     action = torch.tensor(action)
-    
+
+    image_queue = LimitedQueue((240, 320, 4))
+    dist_queue = LimitedQueue((1))
+    joints_queue = LimitedQueue((8))
     # client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # client_socket.connect((host_ip, port))
 
@@ -39,7 +42,15 @@ def main():
         image = bittle.capture_image()
         dist = bittle.compute_distance()
 
-        action = bittle.get_action(params, (image, dist, action))
+        image_queue.add(image)
+        dist_queue.add(dist)
+        joints_queue.add(action)
+        
+
+        action = bittle.get_action(params, (image_queue.get_items(),
+                                            dist_queue.get_items(),
+                                            joints_queue.get_items()))
+        
         bittle.execute_action(action)
         print(time.time() - now)
         step += 1

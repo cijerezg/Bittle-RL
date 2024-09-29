@@ -3,6 +3,7 @@ import copy
 from collections import deque, OrderedDict
 import torch.nn as nn
 import pickle
+import numpy as np
 import pdb
 
 def get_params(models, names, pretrained_params):
@@ -53,14 +54,16 @@ def reset_params(params, keys, optimizers, lr):
 
 
 class LimitedQueue:
-    def __init__(self, max_size=4):
+    def __init__(self, shape, max_size=8):
         self.queue = deque(maxlen=max_size)
+        for i in range(max_size):
+            self.queue.append(np.zeros(shape, dtype=np.float32))            
 
     def add(self, item):
         self.queue.append(item)
 
     def get_items(self):
-        return list(self.queue)
+        return np.stack(self.queue)
 
 
 def get_transition_from_pi(conn, addr):
@@ -72,3 +75,7 @@ def get_transition_from_pi(conn, addr):
         data.append(packet)
 
     return pickle.loads(b"".join(data))
+
+
+
+test = LimitedQueue((240, 320, 4))

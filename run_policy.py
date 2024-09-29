@@ -3,7 +3,7 @@ import VL53L0X # dist sensor
 import time
 from ardSerial import *
 import threading
-
+import torch
 
 class Robot():
     def __init__(self, actor):
@@ -36,6 +36,12 @@ class Robot():
         return self.tof.get_distance() # distance in mm
 
     def get_action(self, params, state):
+        image, dist, joints = state
+        image = torch.tensor(image).unsqueeze(0)
+        dist = torch.tensor(dist).unsqueeze(0)
+        joints = torch.tensor(joints).unsqueeze(0)
+        state = (image, dist, joints)
+        
         sample, density, mu, std = self.actor.run_policy(params, state)
         r_action = self.actor.robot_action(sample)
         return r_action
