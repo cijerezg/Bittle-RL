@@ -8,7 +8,7 @@ from torch.distributions import Normal
 from utils.helpers import LimitedQueue
 import pdb
 import math
-
+from utils.helpers import get_params
 import time
 
 LOG_STD_MAX = 2
@@ -198,28 +198,35 @@ class Policy(nn.Module):
         return sample, density, mu, std
 
 
-device = torch.device('cpu')
+#device = torch.device('cpu')
     
-model = Critic(device)
+#model = Critic(device)
 
-images = torch.rand(1, 8, 240, 320, 4).to(device) # original sizes were 480 ad 640, but that seems too big.
-joints = torch.rand(1, 8, 8).to(device)
-dist = torch.rand(1, 8, 1).to(device)
-action = torch.rand(1, 8, 8, 8).to(device)
-
-model = model.to(device)
-
-now = time.time()
-val = model(images, joints, dist, action)
-
-
-model = Policy(device)
-model = model.to(device)
-
-
-now = time.time()
-out = model(images, joints, dist)
+#images = torch.rand(1, 8, 240, 320, 4).to(device) # original sizes were 480 ad 640, but that seems too big.
+# joints = torch.rand(1, 8, 8).to(device)
+# dist = torch.rand(1, 8, 1).to(device)
+# action = torch.rand(1, 8, 8, 8).to(device)
 
 
 
-print(time.time()-now)
+# model = Policy(device)
+# model = model.to(device)
+
+
+# model = model.to(device)
+# name = ['Policy']
+
+
+# params = get_params([model], name, [None])
+# pdb.set_trace()
+# now = time.time()
+# val = model(images, joints, dist, action)
+
+
+
+# now = time.time()
+# out = model(images, joints, dist)
+
+
+
+# print(time.time()-now)

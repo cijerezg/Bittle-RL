@@ -3,7 +3,7 @@ import copy
 from collections import deque, OrderedDict
 import torch.nn as nn
 import pickle
-
+import pdb
 
 def get_params(models, names, pretrained_params):
 
@@ -17,8 +17,11 @@ def get_params(models, names, pretrained_params):
 
         if pretrained_params is None:
             for name, param in model.named_parameters():
-                if 'bias' in name:
-                    init = torch.nn.init.constant_(param, 0.0)
+                if len(param.shape) <= 1:
+                    if 'bias' in name:
+                        init = torch.nn.init.constant_(param, 0.0)
+                    else:
+                        init = torch.nn.init.constant_(param, 1.0)
                 else:
                     init = torch.nn.init.xavier_normal_(param)
                 par[name] = nn.Parameter(init)
@@ -36,7 +39,10 @@ def reset_params(params, keys, optimizers, lr):
     for key in keys:
         for name, param in params[key].items():
             if len(param.shape) == 1:
-                init = torch.nn.init.constant_(param, 0.01)
+                if 'bias' in name:
+                    init = torch.nn.init.constant_(param, 0.0)
+                else:
+                    init = torch.nn.init.constant_(param, 1.0)                    
             else:
                 init = torch.nn.init.xavier_normal_(param)
             params[key][name] = nn.Parameter(init)

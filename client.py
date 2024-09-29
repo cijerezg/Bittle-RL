@@ -5,6 +5,8 @@ import numpy as np
 from rl.agent import Actor
 from utils.helpers import get_params
 import torch
+import time
+
 
 host_ip = '10.56.136.219'
 port = 12345
@@ -26,17 +28,21 @@ def main():
     bittle.execute_action(action)
     action = torch.tensor(action)
     
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host_ip, port))
+    # client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # client_socket.connect((host_ip, port))
 
-    steps = 0
+    step = 0
 
-    while steps < MAX_STEPS:
+    while step < MAX_STEPS:
+        print(step)
+        now = time.time()
         image = bittle.capture_image()
         dist = bittle.compute_distance()
 
         action = bittle.get_action(params, (image, dist, action))
         bittle.execute_action(action)
+        print(time.time() - now)
+        step += 1
         
     
 #    client_socket.sendall(image)
