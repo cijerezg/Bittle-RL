@@ -35,8 +35,8 @@ def get_params(models, names, pretrained_params):
 def reset_params(params, keys, optimizers, lr):
     for key in keys:
         for name, param in params[key].items():
-            if 'bias' in name:
-                init = torch.nn.init.constant_(param, 0.0)
+            if len(param.shape) == 1:
+                init = torch.nn.init.constant_(param, 0.01)
             else:
                 init = torch.nn.init.xavier_normal_(param)
             params[key][name] = nn.Parameter(init)

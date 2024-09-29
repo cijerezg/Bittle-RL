@@ -16,7 +16,7 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
     actor = Actor(device)
 
-    model, name, pretrained_params  = [Actor.policy], ['Policy'], [None]
+    model, name, pretrained_params  = [actor.policy], ['Policy'], [None]
     params = get_params(model, name, pretrained_params)
 
     bittle = Robot(actor)
