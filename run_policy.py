@@ -2,10 +2,12 @@ from picamera2 import Picamera2
 import VL53L0X # dist sensor
 import time
 from ardSerial import *
+import threading
+
 
 class Robot():
-    def __init__(self, policy):
-        self.policy = policy
+    def __init__(self, actor):
+        self.actor = actor
 
         # Initialize robot
         model = 'Bittle'
@@ -17,15 +19,15 @@ class Robot():
 
         # Initialize camera
         self.cam = Picamera2()
-        camera_config = cam.create_preview_configuration()
+        camera_config = self.cam.create_preview_configuration()
         self.cam.configure(camera_config)
         self.cam.start()
 
         # Initialize distance sensor
-        tof = VL53L0X.Vl53L0X(i2c_bus=1, i2c_address=0x29)
-        tof.open()
-        tof.start_ranging(VL53L0X.Vl53l0XAccuracyMode.BETTER)
-        self.timing = tof.get_timing()
+        self.tof = VL53L0X.Vl53L0X(i2c_bus=1, i2c_address=0x29)
+        self.tof.open()
+        self.tof.start_ranging(VL53L0X.Vl53l0XAccuracyMode.BETTER)
+        self.timing = self.tof.get_timing()
 
     def capture_image(self):
         return self.cam.capture_array()
@@ -33,12 +35,13 @@ class Robot():
     def compute_distance(self):
         return self.tof.get_distance() # distance in mm
 
-    def get_action(self, state):
-        a, mu = policy(state)
-        return a, mu
+    def get_action(self, params, state):
+        sample, density, mu, std = self.actor.run_policy(params, state)
+        r_action = self.actor.robot_action(sample)
+        return r_action
 
     def execute_action(self, action):
-        task = ['I', action, 0.01]
+        task = ['K', action, 0.001]
         send(self.goodPorts, task)
 
     def closeAll(self):

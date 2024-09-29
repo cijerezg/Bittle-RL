@@ -9,8 +9,8 @@ import wandb
 
 
 class Actor():
-    def __init__(self, im_size, action_range):
-        self.policy = Policy(im_size, action_range)
+    def __init__(self, device):
+        self.policy = Policy(device)
         self.max_angle = 125
 
     def run_policy(self, params, x):
