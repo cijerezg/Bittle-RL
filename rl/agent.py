@@ -14,7 +14,7 @@ class Actor():
         self.max_angle = 125
 
     def run_policy(self, params, x):
-        sample, density, mu, std = functional_call(self.policy, params, x)
+        sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
         return sample, density, mu, std
 
     def robot_action(self, sample):
@@ -22,7 +22,7 @@ class Actor():
 
         sample = sample.cpu().detach().numpy()
         sample = 25 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        sample = list(int(sample))
+        sample = sample.flatten().astype(np.float32)tolist()
         r_action.extend(sample)
         
         return r_action

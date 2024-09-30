@@ -43,13 +43,14 @@ def main():
         dist = bittle.compute_distance()
 
         image_queue.add(image)
-        dist_queue.add(dist)
-        joints_queue.add(action)
+        dist_queue.add(np.array([dist], dtype=np.float32))
+        joints_queue.add(np.array(action[-8:], dtype=np.float32)
         
 
         action = bittle.get_action(params, (image_queue.get_items(),
-                                            dist_queue.get_items(),
-                                            joints_queue.get_items()))
+                                            joints_queue.get_items(),
+                                            dist_queue.get_items()))
+
         
         bittle.execute_action(action)
         print(time.time() - now)

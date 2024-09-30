@@ -20,6 +20,7 @@ class Robot():
         # Initialize camera
         self.cam = Picamera2()
         camera_config = self.cam.create_preview_configuration()
+        camera_config['main']['size'] = (320, 240)
         self.cam.configure(camera_config)
         self.cam.start()
 
@@ -47,7 +48,7 @@ class Robot():
         return r_action
 
     def execute_action(self, action):
-        task = ['K', action, 0.001]
+        task = ['K', action, 0.1]
         send(self.goodPorts, task)
 
     def closeAll(self):
