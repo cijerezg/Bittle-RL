@@ -13,9 +13,9 @@ class Robot():
         model = 'Bittle'
         postureTable = postureDict[model]
         self.goodPorts = {}
-        connectPort(goodPorts)
-        t=threading.Thread(target=keepCheckingPort, args=(goodPorts,))
-        t.start()
+        connectPort(self.goodPorts)
+        self.t=threading.Thread(target=keepCheckingPort, args=(self.goodPorts,))
+        self.t.start()
 
         # Initialize camera
         self.cam = Picamera2()
