@@ -45,7 +45,7 @@ class Robot():
         
         sample, density, mu, std = self.actor.run_policy(params, state)
         r_action = self.actor.robot_action(sample)
-        return r_action
+        return r_action, sample
 
     def execute_action(self, action):
         task = ['K', action, 0.1]

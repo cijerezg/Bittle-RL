@@ -6,8 +6,15 @@ import pickle
 import numpy as np
 import pdb
 
-def get_params(models, names, pretrained_params):
 
+class hyper_params:
+    def __init__(self, args):
+        for key, valye in args.items():
+            setattr(self, key, value)
+
+
+
+def get_params(models, names, pretrained_params):
     params = OrderedDict()
 
     for model, name_model, pretrained_params in zip(models, names, pretrained_params):
@@ -66,7 +73,13 @@ class LimitedQueue:
         return np.stack(self.queue)
 
 
-def get_transition_from_pi(conn, addr):
+def send_data(sender, data):
+    for val in data:
+        serial_val = pickle.dumps(data)
+        sender.sendall(serial_val)
+        
+    
+def get_data(conn):
     data = []
     
     while True:
@@ -77,5 +90,18 @@ def get_transition_from_pi(conn, addr):
     return pickle.loads(b"".join(data))
 
 
+class AttrDict(dict):
+    __setattr__ = dict.__setitem__
 
-test = LimitedQueue((240, 320, 4))
+    def __getattr__(self, attr):
+        try:
+            return self.__getitem__(attr)
+        except KeyError:
+            raise AttributeError(f"Attribute {attr} not found")
+
+    def __getstate__(self):
+        return self
+
+    def __setstate__(self, d):
+        self = d
+        

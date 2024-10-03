@@ -3,7 +3,7 @@ from rl.agent import BittleRL
 from rl.replay_buffer import ReplayBuffer
 from models.architectures import Policy, Critic
 from rl.agent import Actor
-from utils.helpers import get_transition_from_pi
+from utils.helpers import get_data, send_data
 from utils.optimizers import reset_params
 import wandb
 import os
@@ -24,7 +24,6 @@ data_folder = 'Data'
 policy_folder = 'Checkpoints'
 
 config = {
-    'device': 'cuda',
     'hidden_dim_critic': 256,
     'hidden_dim_policy': 128,
 
@@ -45,29 +44,25 @@ config = {
 
 def main(config=None):
     with wandb.init(project='BittleRL', config=config):
-        
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
+
         config = wandb.config
 
-        policy = Policy()#enter arguments)
-        critic = Critic()#enter arguments)
-        actor = Actor()#enter arguments)
+        actor = Actor(device)
+        critic = Critic(device)
 
-        experience_buffer = ReplayBuffer()# enter arguments)
+        experience_buffer = ReplayBuffer(int(1e8))
+        bittle_rl = BittleRL(experience_buffer, actor, critic, config)
 
-        bittle_rl = BittleRL()# enter arguments)
+        models = [actor.policy, critic, critic]
+        names = ['Policy', 'Critic', 'Target_critic']
+        pretrained_models = [None, None, None]
 
-        models = []# enter arguments]
-
-        pretrained_models = 1# enter this
-        names = 2# enter this
-
-        params = get_params(models, pretrained_models)
+        params = get_params(models, names, pretrained_models)
 
         keys_optimizers = ['Critic', 'Policy']
-
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
             
-
         # Set up socket communication
         server_address = ('', 12345)
   
@@ -80,14 +75,14 @@ def main(config=None):
 
 
         while iterations < config.max_iterations:
-            transition = get_transition_from_pi(conn, addr)
-
+            transition = get_data(conn)
+    
             params = bittle_rl.training_iteration(params, optimizers, transition)
 
             if iterations % config.reset_frequency == 0:
-                params, optimizers, agent = reset_params
+                params, optimizers, agent = reset_params(params, names, optimizers, config.learning_rate)
 
-            # send params back to pi
+            send_data(server_socket, (params))
             iterations += 1
             
             
