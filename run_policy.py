@@ -38,7 +38,7 @@ class Robot():
 
     def get_action(self, params, state):
         image, dist, joints = state
-        image = torch.tensor(image).unsqueeze(0)
+        image = torch.tensor(image, dtype=torch.float32).unsqueeze(0)
         dist = torch.tensor(dist).unsqueeze(0)
         joints = torch.tensor(joints).unsqueeze(0)
         state = (image, dist, joints)

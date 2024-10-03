@@ -22,7 +22,7 @@ class Actor():
 
         sample = sample.cpu().detach().numpy()
         sample = 25 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        sample = sample.flatten().astype(np.float32)tolist()
+        sample = sample.flatten().astype(np.float32).tolist()
         r_action.extend(sample)
         
         return r_action

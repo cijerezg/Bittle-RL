@@ -158,12 +158,12 @@ class Policy(nn.Module):
         self.main_attn_block1 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
         self.main_attn_block2 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
 
-        # Embed to create every action frame
-        self.act_attn_block1 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
-        self.act_attn_block2 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
-
         self.deep_mu = nn.Linear(128, 64)
         self.deep_log_std = nn.Linear(128, 64)
+
+        # Conv layer to smooth output in temporal dim
+        self.conv_act1 = nn.Conv1d(8, 8, 3, padding=1, groups=8)
+        self.conv_act2 = nn.Conv1d(8, 8, 3, padding=1, groups=8)
         
         self.mu = nn.Linear(128, 8) # 8 frames and each action vector is 8        
         self.log_std = nn.Linear(128, 8) # 8 frames and each action vector is 8
@@ -181,11 +181,10 @@ class Policy(nn.Module):
         x, _ = self.main_attn_block1(x)
         x, _ = self.main_attn_block2(x)
         
-        x, _ = self.act_attn_block1(x)
-        x, _ = self.act_attn_block2(x)
-
         mu = F.relu(self.deep_mu(x))
         mu = self.mu(x)
+        mu = self.conv_act1(mu)
+        mu = self.conv_act2(mu)
 
         log_std = F.relu(self.deep_log_std(x))
         log_std = self.log_std(x)

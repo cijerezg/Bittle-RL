@@ -44,7 +44,7 @@ def main():
 
         image_queue.add(image)
         dist_queue.add(np.array([dist], dtype=np.float32))
-        joints_queue.add(np.array(action[-8:], dtype=np.float32)
+        joints_queue.add(np.array(action[-8:], dtype=np.float32))
         
 
         action = bittle.get_action(params, (image_queue.get_items(),
