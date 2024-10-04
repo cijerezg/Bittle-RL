@@ -69,6 +69,9 @@ def get_data(conn):
         if not packet: break
         data.append(packet)
 
+    
+    print('unpacking')
+    pdb.set_trace()
     return pickle.loads(b"".join(data))
 
 

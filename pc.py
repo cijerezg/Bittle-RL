@@ -2,7 +2,7 @@ import socket
 import time
 from utils.helpers import send_data, get_data
 import numpy as np
-
+import pickle
 
 
 def main():
@@ -16,11 +16,26 @@ def main():
     i = 0
 
     while i < 1000:
-        data = get_data(conn)
 
+        data = []
+        while True:
+            packet = conn.recv(4096)
+            if not packet: break
+            data.append(packet)
+
+        print('done receiving data')
+        r_dat = pickle.loads(b"".join(data))
+                
         time.sleep(4)
 
-        arr = {'val1': np.zeros(30,30), 'val1': np.zeros(30,30),
-               'val1': np.zeros(30,30), 'val1': np.zeros(30,30)}
+        arr = {'val1': np.zeros(30,30), 'val4': np.zeros(30,30),
+               'val2': np.zeros(30,30), 'val3': np.zeros(30,30)}
 
-        send_data(conn, (arr))
+
+        ser_dict = pickle.dumps(arr)
+        server_socket.sendall(ser_dict)
+        print(i)
+        i += 1
+
+
+main()

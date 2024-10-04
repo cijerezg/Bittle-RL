@@ -83,7 +83,7 @@ def main(config=None):
             now = time.time()
     
             params = bittle_rl.training_iteration(params, optimizers, transition)
-
+            
             iterations += 1
 
             if iterations % config.reset_frequency == 0:
