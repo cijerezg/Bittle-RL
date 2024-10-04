@@ -3,7 +3,6 @@ from torch.optim import Adam
 import copy
 import torch.nn as nn
 import time
-from helpers import reset_params
 
 
 
@@ -18,7 +17,6 @@ def Adam_update(params: list[dict],
         optimizers[key].step()
 
     return params
-
 
 
 def set_optimizers(params, keys, lr):

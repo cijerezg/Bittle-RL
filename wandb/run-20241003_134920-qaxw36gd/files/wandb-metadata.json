@@ -1,0 +1,124 @@
+{
+    "os": "Linux-6.8.9-100.fc38.x86_64-x86_64-with-glibc2.37",
+    "python": "3.11.9",
+    "heartbeatAt": "2024-10-03T18:49:21.422589",
+    "startedAt": "2024-10-03T18:49:20.563368",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "https://github.com/cijerezg/Bittle-RL.git",
+        "commit": "ca8a623b54c2d5361820af9bff392a04e2ff5cc9"
+    },
+    "email": "cijerezg@unal.edu.co",
+    "root": "/home/carlos/Documents/Research/Petoi/Bittle-RL",
+    "host": "fedora",
+    "username": "carlos",
+    "executable": "/home/carlos/.virtualenvs/general_env/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 2817.2266250000002,
+        "min": 2200.0,
+        "max": 3800.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3578.341,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2229.969,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3892.318,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2229.762,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2500.785,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3193.972,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3800.0,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3706.454,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3089.646,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3396.475,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 1733.339,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2538.929,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3800.0
+        }
+    ],
+    "disk": {
+        "total": 2804.7138671875,
+        "used": 302.5617561340332
+    },
+    "gpu": "NVIDIA GeForce GTX 1080",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX 1080",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 31.177444458007812
+    }
+}

@@ -3,13 +3,14 @@ from rl.agent import BittleRL
 from rl.replay_buffer import ReplayBuffer
 from models.architectures import Policy, Critic
 from rl.agent import Actor
-from utils.helpers import get_data, send_data
-from utils.optimizers import reset_params
+from utils.helpers import get_data, send_data, get_params
+from utils.optimization import reset_params, set_optimizers
 import wandb
 import os
 import torch
 import pickle
 import numpy as np
+import time
 
 # test
 
@@ -24,6 +25,7 @@ data_folder = 'Data'
 policy_folder = 'Checkpoints'
 
 config = {
+    'device': torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
     'hidden_dim_critic': 256,
     'hidden_dim_policy': 128,
 
@@ -33,25 +35,24 @@ config = {
     'discount': 0.97,
     'gradient_steps': 4,
 
-    'max_iterations': int(6.4e4) - 1,
-    'buffer_size': int(6.4e6) - 1,
     'reset_frequency': 2000,
     'delta_entropy': 25,
-    'load_pretrained_models': False
+    'load_pretrained_models': False,
+    'max_iterations': 10000
 }
 
     
 
 def main(config=None):
     with wandb.init(project='BittleRL', config=config):
-        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         config = wandb.config
 
         actor = Actor(device)
-        critic = Critic(device)
+        critic = Critic(device).to(device)
 
-        experience_buffer = ReplayBuffer(int(1e8))
+        experience_buffer = ReplayBuffer()
         bittle_rl = BittleRL(experience_buffer, actor, critic, config)
 
         models = [actor.policy, critic, critic]
@@ -64,30 +65,38 @@ def main(config=None):
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
             
         # Set up socket communication
-        server_address = ('', 12345)
+        # server_address = ('', 12345)
   
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind(server_address)
-        server_socket.listen(1)
-        conn, addr = server_socket.accept()
+        # server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # server_socket.bind(server_address)
+        # server_socket.listen(1)
+        # conn, addr = server_socket.accept()
 
         iterations = 0
 
 
         while iterations < config.max_iterations:
-            transition = get_data(conn)
+            #transition = get_data(conn)
+
+            transition = (np.zeros((240, 320, 4), dtype=np.float32), np.zeros(8, dtype=np.float32),
+                          np.zeros(1, dtype=np.float32), np.zeros((8, 8), dtype=np.float32))
+            now = time.time()
     
             params = bittle_rl.training_iteration(params, optimizers, transition)
 
-            if iterations % config.reset_frequency == 0:
-                params, optimizers, agent = reset_params(params, names, optimizers, config.learning_rate)
-
-            send_data(server_socket, (params))
             iterations += 1
+
+            if iterations % config.reset_frequency == 0:
+                keys = ['Policy', 'Critic']
+                params, optimizers, agent = reset_params(params, names, optimizers, keys, config.learning_rate)
+
+            #send_data(server_socket, (params))
+
             
             
-if __name__ = "__main__":
-    val = main()
-    
+#if __name__ = "__main__":
+#    val = main()
+
+main(config)
   
   

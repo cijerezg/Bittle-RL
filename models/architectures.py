@@ -107,14 +107,14 @@ class Critic(nn.Module):
         # Actions
         self.embed_actions = nn.Linear(8, hidden_dim)
         self.action_attn_block = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
-        self.recast_action = nn.Linear(8, 1)
 
         # Rest of the network
         self.main_attn_block1 = AttentionBlock(device, d_model=hidden_dim, n_heads=16, out_dim=hidden_dim)
         self.main_attn_block2 = AttentionBlock(device, d_model=hidden_dim, n_heads=16, out_dim=hidden_dim)
 
-        self.deep_linear = nn.Linear(256 * 8, 32)
-        self.out_linear = nn.Linear(32, 1)
+        self.deep_linear1 = nn.Linear(256 * 8, 64)
+        self.deep_linear2 = nn.Linear(64, 64)
+        self.out_linear = nn.Linear(64, 1)
 
         self.action_frames = action_frames
 
@@ -125,18 +125,18 @@ class Critic(nn.Module):
         dist = self.embed_dist(dist)
 
         actions = self.embed_actions(actions)
-        for i in range(self.action_frames):
-            actions[:, i, :, :], _ = self.action_attn_block(actions[:, i, :, :])
-        actions = actions.swapaxes(2, 3)
-        actions = F.relu(self.recast_action(actions)).squeeze()
-
-        x = im + joints + dist + actions
+        actions, _ = self.action_attn_block(actions)
+        
+        x = im + joints + dist
 
         x, _ = self.main_attn_block1(x)
         x, _ = self.main_attn_block2(x)
+
+        x = x + actions
         x = x.reshape(x.shape[0], -1)
         
-        x = F.relu(self.deep_linear(x))
+        x = F.relu(self.deep_linear1(x))
+        x = F.relu(self.deep_linear2(x))
         x = self.out_linear(x)
 
         return x
@@ -183,8 +183,11 @@ class Policy(nn.Module):
         
         mu = F.relu(self.deep_mu(x))
         mu = self.mu(x)
+
+        mu = torch.swapaxes(mu, -1, -2)
         mu = self.conv_act1(mu)
         mu = self.conv_act2(mu)
+        mu = torch.swapaxes(mu, -1, -2)
 
         log_std = F.relu(self.deep_log_std(x))
         log_std = self.log_std(x)

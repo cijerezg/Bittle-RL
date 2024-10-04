@@ -9,9 +9,8 @@ import pdb
 
 class hyper_params:
     def __init__(self, args):
-        for key, valye in args.items():
+        for key, value in args.items():
             setattr(self, key, value)
-
 
 
 def get_params(models, names, pretrained_params):
@@ -41,23 +40,6 @@ def get_params(models, names, pretrained_params):
 
     return params
 
-
-
-def reset_params(params, keys, optimizers, lr):
-    for key in keys:
-        for name, param in params[key].items():
-            if len(param.shape) == 1:
-                if 'bias' in name:
-                    init = torch.nn.init.constant_(param, 0.0)
-                else:
-                    init = torch.nn.init.constant_(param, 1.0)                    
-            else:
-                init = torch.nn.init.xavier_normal_(param)
-            params[key][name] = nn.Parameter(init)
-
-        optimizers[key] = Adam(params[key].values(), lr)
-
-    return params, optimizers
 
 
 class LimitedQueue:

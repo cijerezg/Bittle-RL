@@ -1,7 +1,6 @@
 import sys
 sys.path.insert(0, '../')
 
-
 import torch
 from models.architectures import Critic, Policy
 import copy
@@ -13,14 +12,15 @@ import wandb
 from utils.helpers import hyper_params
 from torch.optim import Adam
 from utils.optimization import Adam_update
-
+import pdb
+import time
 
 INIT_LOG_ALPHA = 0
 MAX_ENTROPY = 40
 
 class Actor():
     def __init__(self, device):
-        self.policy = Policy(device)
+        self.policy = Policy(device).to(device)
         self.max_angle = 125
 
     def run_policy(self, params, x):
@@ -38,7 +38,7 @@ class Actor():
         return r_action
 
 class BittleRL(hyper_params):
-    def __init__(self, env, experience_buffer, actor, critic, args):             
+    def __init__(self, experience_buffer, actor, critic, args):             
         super().__init__(args)
 
         # Need to define additional params
@@ -63,7 +63,7 @@ class BittleRL(hyper_params):
 
         log_data = True if self.log_data & self.log_data_freq == 0 else False
 
-        if self.experience_buffer.size >= self.batch_size:
+        if self.experience_buffer.eps >= 1:
             for i in range(self.gradient_steps):
                 log_data = log_data if i == 0 else False
                 policy_loss, critic_loss = self.losses(params, log_data)
@@ -77,20 +77,19 @@ class BittleRL(hyper_params):
 
 
     def losses(self, params, log_data):
-        batch = self.experience_buffer.sample(batch_size=self.batch_size)
+        batch = self.experience_buffer.sample(batch_size=32)
 
         image = torch.from_numpy(batch.image).to(self.device)
         dist = torch.from_numpy(batch.dist).to(self.device)
         joints = torch.from_numpy(batch.joints).to(self.device)
-        next_image = torch.from_numpy(batch.image).to(self.device)
-        next_dist = torch.from_numpy(batch.distance).to(self.device)
-        next_joints = torch.from_numpy(batch.joints).to(self.device)
-        a = torch.from_numpy(batch.z).to(self.device)
-        rew = torch.from_numpy(batch.rewards).to(self.device)
+        next_image = torch.from_numpy(batch.next_image).to(self.device)
+        next_dist = torch.from_numpy(batch.next_dist).to(self.device)
+        next_joints = torch.from_numpy(batch.next_joints).to(self.device)
+        a = torch.from_numpy(batch.a).to(self.device)
+        rew = torch.from_numpy(batch.rew).to(self.device)
 
-        
         with torch.no_grad():
-            next_a = self.actor.run_policy(params, (next_image, next_joints, next_dist))
+            next_sample, _, next_a, _ = self.actor.run_policy(params, (next_image, next_joints, next_dist))
 
         
         target_critic_arg = (next_image, next_joints, next_dist, next_a)
@@ -99,8 +98,8 @@ class BittleRL(hyper_params):
         with torch.no_grad():
             q_target = self.eval_critic(target_critic_arg, params,
                                         target_critic=True)
-
-        q_target = rew + (self.discount * q_target)
+        
+        q_target = rew + (self.discount * q_target.squeeze())
 
         q = self.eval_critic(critic_arg, params)
 
@@ -110,13 +109,13 @@ class BittleRL(hyper_params):
         sample, pdf, mu, std = self.actor.run_policy(params, (image, joints, dist))
 
         q_pi_arg = (image, joints, dist, sample)
-        q_pi = self.eval_critic(params, q_pi_arg)
+        q_pi = self.eval_critic(q_pi_arg, params)
 
         entropy_term = -torch.clamp(pdf.entropy(), max=MAX_ENTROPY).mean()
         alpha_skill = torch.exp(self.log_alpha_skill).detach()
         entropy_loss = alpha_skill * entropy_term
 
-        policy_loss = q_pi + entropy_loss
+        policy_loss = q_pi.mean() + entropy_loss.mean()
 
         self.update_log_alpha(entropy_term)
 
@@ -130,7 +129,7 @@ class BittleRL(hyper_params):
 
     def update_log_alpha(self, entropy_term):
         loss = torch.exp(self.log_alpha_skill) * \
-            (entropy_term - self.delta_skill).detach()
+            (entropy_term - self.delta_entropy).detach()
 
         self.optimizer_alpha_skill.zero_grad()
         loss.backward()
