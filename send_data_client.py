@@ -15,7 +15,7 @@ def shell_cmd(ip, path, file):
 def main():
     ip = '192.168.0.155'
     local_path = 'experiences'
-    remote_path = 'home/carlos/Documents/Research/Petoi/Bittle-RL/'
+    remote_path = '/home/carlos/Documents/Research/Petoi/Bittle-RL/'
     
 
     while True:

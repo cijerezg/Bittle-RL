@@ -69,7 +69,7 @@ def load_params(path):
     if os.listdir(path):
         for file in os.listdir(path):
             full_path = os.path.join(path, file)
-            params = torch.load(path, weights_only=True)
+            params = torch.load(full_path, weights_only=True)
             Path(full_path).unlink()
         return params
     else:
