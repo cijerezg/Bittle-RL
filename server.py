@@ -3,7 +3,7 @@ from rl.agent import BittleRL
 from rl.replay_buffer import ReplayBuffer
 from models.architectures import Policy, Critic
 from rl.agent import Actor
-from utils.helpers import get_data, send_data, get_params
+from utils.helpers import get_params, save_params, load_experiences
 from utils.optimization import reset_params, set_optimizers
 import wandb
 import os
@@ -22,7 +22,9 @@ wandb.login()
 
 
 data_folder = 'Data'
-policy_folder = 'Checkpoints'
+policy_folder = 'checkpoints'
+path_exp = 'experiences'
+
 
 config = {
     'device': torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
@@ -64,23 +66,13 @@ def main(config=None):
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
             
-        # Set up socket communication
-        # server_address = ('', 12345)
-  
-        # server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # server_socket.bind(server_address)
-        # server_socket.listen(1)
-        # conn, addr = server_socket.accept()
-
         iterations = 0
 
-
         while iterations < config.max_iterations:
-            #transition = get_data(conn)
+            transitions = load_experiences(path_exp)
 
             transition = (np.zeros((240, 320, 4), dtype=np.float32), np.zeros(8, dtype=np.float32),
                           np.zeros(1, dtype=np.float32), np.zeros((8, 8), dtype=np.float32))
-            now = time.time()
     
             params = bittle_rl.training_iteration(params, optimizers, transition)
             
@@ -90,7 +82,7 @@ def main(config=None):
                 keys = ['Policy', 'Critic']
                 params, optimizers, agent = reset_params(params, names, optimizers, keys, config.learning_rate)
 
-            #send_data(server_socket, (params))
+            save_params(policy_folder, params['Policy'])
 
             
             

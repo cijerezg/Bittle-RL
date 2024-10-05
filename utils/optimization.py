@@ -6,10 +6,7 @@ import time
 
 
 
-def Adam_update(params: list[dict],
-                losses: list[float],
-                keys: list[str],
-                optimizers: list):
+def Adam_update(params, losses, keys, optimizers):
 
     for loss, key in zip(losses, keys):
         optimizers[key].zero_grad()
@@ -22,18 +19,7 @@ def Adam_update(params: list[dict],
 def set_optimizers(params, keys, lr):
     optimizers = {}
     for key in keys:
-        if 'skills' in key:
-            parameters = (*params['Encoder'].values(),
-                          *params['Decoder'].values())
-        elif 'state' in key:
-            parameters = (*params['StateEncoder'].values(),
-                          *params['StateDecoder'].values())
-
-        else:
-            parameters = params[key].values()
-                
-
-        optimizers[key] = Adam(parameters, lr=lr)
+        optimizers[key] = Adam(params[key].values(), lr)
 
     return optimizers
 

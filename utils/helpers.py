@@ -5,6 +5,9 @@ import torch.nn as nn
 import pickle
 import numpy as np
 import pdb
+import datetime
+import os
+from pathlib import Path
 
 
 class hyper_params:
@@ -41,6 +44,37 @@ def get_params(models, names, pretrained_params):
     return params
 
 
+def save_experiences(path, transition, step):
+    np.savez(f'{path}/transition_{step}.npz', *transition)
+       
+
+def load_experiences(path):
+    if os.listdir(path):
+        exps = []
+        for file in os.listdir(path):
+            full_path = os.path.join(path, file)
+            data = np.load(full_path)
+            exps.append(data)
+            Path(full_path).unlink()
+        return exps
+    else:
+        return None
+
+    
+def save_params(path, params):
+    #params = {key: value.cpu() for key, value in params.items()}    
+    torch.save(params, f'{path}/params.pt')
+
+def load_params(path):
+    if os.listdir(path):
+        for file in os.listdir(path):
+            full_path = os.path.join(path, file)
+            params = torch.load(path)
+            Path(full_path).unlink()
+        return params
+    else:
+        return None
+
 
 class LimitedQueue:
     def __init__(self, shape, max_size=8):
@@ -54,25 +88,6 @@ class LimitedQueue:
     def get_items(self):
         return np.stack(self.queue)
 
-
-def send_data(sender, data):
-    for val in data:
-        serial_val = pickle.dumps(data)
-        sender.sendall(serial_val)
-        
-    
-def get_data(conn):
-    data = []
-    
-    while True:
-        packet = conn.recv(4096)
-        if not packet: break
-        data.append(packet)
-
-    
-    print('unpacking')
-    pdb.set_trace()
-    return pickle.loads(b"".join(data))
 
 
 class AttrDict(dict):
@@ -90,3 +105,5 @@ class AttrDict(dict):
     def __setstate__(self, d):
         self = d
         
+
+

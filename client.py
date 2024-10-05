@@ -3,16 +3,20 @@ from run_policy import Robot
 import pickle
 import numpy as np
 from rl.agent import Actor
-from utils.helpers import get_params, LimitedQueue, send_data, get_data
+from utils.helpers import get_params, LimitedQueue, save_experiences, load_params
 import torch
 import time
 
 
 host_ip = '10.56.136.219'
-port = 12345
+
 MAX_STEPS = 1000
 FRAMES = 8
 ACTION_DIM = 8
+
+path_exp = 'experiences'
+path_params = 'checkpoints'
+
 
 def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
@@ -31,9 +35,6 @@ def main():
     dist_queue = LimitedQueue((1))
     joints_queue = LimitedQueue((8))
     
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host_ip, port))
-
     step = 0
 
     while step < MAX_STEPS:
@@ -48,12 +49,12 @@ def main():
                                                            joints_queue.get_items(),
                                                            dist_queue.get_items()))
 
-        send_data(client_socket, (image, dist, sample_action)) 
+        save_experiences(path_exp, (image, dist, sample_action), step) 
         
         bittle.execute_action(action)
         step += 1
-
-        params = get_data(client_socket)
+        
+        params = load_params(path_params)
     
     
 if __name__ == "__main__":

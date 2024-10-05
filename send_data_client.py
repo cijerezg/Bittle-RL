@@ -2,21 +2,28 @@ import subprocess
 import time
 import os
 
+# you may need to run
+# ssh-agent bash
+# ssh-add
+# to be able to send data without asking for password
 
 
 def shell_cmd(ip, path, file):
-    return f'scp {file} carlos@{ip}:{path}/{file}'
+    return f'scp {file} carlos@{ip}:{path}'
     
 
 def main():
     ip = '192.168.0.155'
-    path = 'home/carlos/Documents/Research/Petoi/Bittle-RL/experiences'
+    local_path = 'experiences'
+    remote_path = 'home/carlos/Documents/Research/Petoi/Bittle-RL/'
     
 
     while True:
-        if os.listdir(path):
-            for file in os.listdir(path):
-                cmd = shell_cmd(ip, path, file)
+        if os.listdir(local_path):
+            for file in os.listdir(local_path):
+                local_file = os.path.join(local_path, file)
+                remote_file = os.path.join(remote_path, local_file)
+                cmd = shell_cmd(ip, remote_file, local_file)
                 subprocess.run(cmd, shell=True) 
                 subprocess.run(f'rm {file}', shell=True)                
         else:
