@@ -15,7 +15,7 @@ import pdb
        
 class ReplayBuffer():
     def __init__(self, episode_length=100, episodes=50):
-        self.images_buf = np.zeros((episodes, episode_length, 240, 320, 4), dtype=np.float32)
+        self.images_buf = np.zeros((episodes, episode_length, 240, 320, 3), dtype=np.float32)
         self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
         self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
         self.a_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)

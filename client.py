@@ -31,7 +31,7 @@ def main():
     action.extend(init_joints)
     bittle.execute_action(action)   
     
-    image_queue = LimitedQueue((240, 320, 4))
+    image_queue = LimitedQueue((240, 320, 3))
     dist_queue = LimitedQueue((1))
     joints_queue = LimitedQueue((8))
     

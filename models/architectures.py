@@ -65,7 +65,7 @@ class AttentionBlock(nn.Module):
 class ConvBlock(nn.Module):
     def __init__(
         self, im_width=640, im_height=480, 
-        in_ch=4, hidden_ch=32, out_ch=4, 
+        in_ch=3, hidden_ch=32, out_ch=4, 
         filter_size=5, length=3, embed_dim=128, stride=2
         ):
         super().__init__()
