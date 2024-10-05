@@ -31,7 +31,7 @@ class Robot():
         self.timing = self.tof.get_timing()
 
     def capture_image(self):
-        return self.cam.capture_array()[:, : 0:3]
+        return self.cam.capture_array()[:, :, 0:3]
 
     def compute_distance(self):
         return self.tof.get_distance() # distance in mm
