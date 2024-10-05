@@ -11,7 +11,7 @@ def shell_cmd(ip, path, file):
 def main():
     ip = '192.168.0.241'
     local_path = 'checkpoints'
-    remote_path = 'home/carlos/Documents/Petoi/Bittle-RL/'
+    remote_path = '/home/carlos/Documents/Bittle-RL/'
     
 
     while True:
@@ -21,12 +21,8 @@ def main():
                 remote_file = os.path.join(remote_path, local_file)
                 cmd = shell_cmd(ip, remote_file, local_file)
                 subprocess.run(cmd, shell=True) 
-                subprocess.run(f'rm {file}', shell=True)                
         else:
-            time.sleep(4)
-                
+            time.sleep(5)
+                        
         
-        
-
-
-
+main()

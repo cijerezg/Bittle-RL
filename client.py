@@ -40,21 +40,26 @@ def main():
     while step < MAX_STEPS:
         image = bittle.capture_image()
         dist = bittle.compute_distance()
+        joints = np.array(action[-8:], dtype=np.float32)
 
         image_queue.add(image)
         dist_queue.add(np.array([dist], dtype=np.float32))
-        joints_queue.add(np.array(action[-8:], dtype=np.float32))
+        joints_queue.add(joints)
 
         action, sample_action = bittle.get_action(params, (image_queue.get_items(),
                                                            joints_queue.get_items(),
                                                            dist_queue.get_items()))
 
-        save_experiences(path_exp, (image, dist, sample_action), step) 
+        sample_action = sample_action.detach().numpy()
+        save_experiences(path_exp, (image, dist, joints, sample_action), step) 
         
         bittle.execute_action(action)
         step += 1
         
-        params = load_params(path_params)
+        updated_policy = load_params(path_params)
+        
+        if updated_policy:
+            params['Policy'] = updated_policy
     
     
 if __name__ == "__main__":

@@ -24,23 +24,23 @@ class ReplayBuffer():
         self.ptr, self.max_steps = 0, episode_length
         self.eps, self.max_episodes = 0, episodes
     
-    def add(self, transition):
-        image, joint, dist, a = transition
-        #rew = -np.abs(dist/10 - 10) 
-
-        image = (image - 125) / 125
-        dist = dist / 100
+    def add(self, transitions):
+        for transition in transitions:
+            image = transition['arr_0']
+            image = (image - 125) / 125
+            dist = transition['arr_1'] / 100
+            joints = transition['arr_2']
+            a = transition['arr_3']
+            
+            self.images_buf[self.eps, self.ptr] = np.array(image, dtype=np.float32)
+            self.joints_buf[self.eps, self.ptr] = joints
+            self.dist_buf[self.eps, self.ptr] = dist
+            self.a_buf[self.eps, self.ptr] = a
         
-        self.images_buf[self.eps, self.ptr] = np.array(image, dtype=np.float32)
-        self.joints_buf[self.eps, self.ptr] = joint
-        self.dist_buf[self.eps, self.ptr] = dist
-        self.a_buf[self.eps, self.ptr] = a
-        #self.rew_buf[self.eps, self.ptr] = rew
+            self.ptr = (self.ptr + 1) % self.max_steps
+            if self.ptr == self.max_steps - 1:
+                self.eps += 1
         
-        self.ptr = (self.ptr + 1) % self.max_steps
-        if self.ptr == self.max_steps - 1:
-            self.eps += 1
-
 
     def sample(self, batch_size=32):
         end_idxs = np.random.randint(8, self.max_steps - 1, size=batch_size)

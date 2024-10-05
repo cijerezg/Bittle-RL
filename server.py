@@ -11,6 +11,7 @@ import torch
 import pickle
 import numpy as np
 import time
+import pdb
 
 # test
 
@@ -70,11 +71,8 @@ def main(config=None):
 
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
-
-            transition = (np.zeros((240, 320, 4), dtype=np.float32), np.zeros(8, dtype=np.float32),
-                          np.zeros(1, dtype=np.float32), np.zeros((8, 8), dtype=np.float32))
     
-            params = bittle_rl.training_iteration(params, optimizers, transition)
+            params = bittle_rl.training_iteration(params, optimizers, transitions)
             
             iterations += 1
 
@@ -83,8 +81,6 @@ def main(config=None):
                 params, optimizers, agent = reset_params(params, names, optimizers, keys, config.learning_rate)
 
             save_params(policy_folder, params['Policy'])
-
-            
             
 #if __name__ = "__main__":
 #    val = main()

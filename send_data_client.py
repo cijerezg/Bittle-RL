@@ -25,7 +25,7 @@ def main():
                 remote_file = os.path.join(remote_path, local_file)
                 cmd = shell_cmd(ip, remote_file, local_file)
                 subprocess.run(cmd, shell=True) 
-                subprocess.run(f'rm {file}', shell=True)                
+                subprocess.run(f'rm {local_file}', shell=True)                
         else:
             time.sleep(1)
                 

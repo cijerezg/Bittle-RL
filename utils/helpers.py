@@ -62,14 +62,14 @@ def load_experiences(path):
 
     
 def save_params(path, params):
-    #params = {key: value.cpu() for key, value in params.items()}    
+    params = {key: value.cpu() for key, value in params.items()}    
     torch.save(params, f'{path}/params.pt')
 
 def load_params(path):
     if os.listdir(path):
         for file in os.listdir(path):
             full_path = os.path.join(path, file)
-            params = torch.load(path)
+            params = torch.load(path, weights_only=True)
             Path(full_path).unlink()
         return params
     else:
