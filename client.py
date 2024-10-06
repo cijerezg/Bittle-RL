@@ -57,6 +57,9 @@ def main():
 
         sample_action = sample_action.detach().numpy()
         save_experiences(path_exp, (image, dist, joints, sample_action), step) 
+
+        print(step)
+        print(action[4:4+8])
         
         bittle.execute_action(action)
         step += 1

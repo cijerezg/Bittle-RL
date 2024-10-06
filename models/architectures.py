@@ -200,39 +200,39 @@ class Policy(nn.Module):
         return sample, density, soft_mu, std
 
 
-# device = torch.device('cpu')
+device = torch.device('cpu')
     
-# # model = Critic(device)
+# model = Critic(device)
 
-# images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
-# joints = torch.rand(1, 8, 8).to(device)
-# dist = torch.rand(1, 8, 1).to(device)
-# # action = torch.rand(1, 8, 8).to(device)
+images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
+joints = torch.rand(1, 8, 8).to(device)
+dist = torch.rand(1, 8, 1).to(device)
+# action = torch.rand(1, 8, 8).to(device)
 
 
 
-# model = Policy(device)
+model = Policy(device)
+model = model.to(device)
+
+
 # model = model.to(device)
+# name = ['Policy']
 
 
-# # model = model.to(device)
-# # name = ['Policy']
+# params = get_params([model], name, [None])
 
-
-# # params = get_params([model], name, [None])
-
-# # pdb.set_trace()
+# pdb.set_trace()
 
 
 
-# # now = time.time()
-# # val = model(images, joints, dist, action)
+# now = time.time()
+# val = model(images, joints, dist, action)
 
 
 
-# # now = time.time()
-# out = model(images, joints, dist)
+# now = time.time()
+out = model(images, joints, dist)
 
 
 
-# # print(time.time()-now)
+# print(time.time()-now)
