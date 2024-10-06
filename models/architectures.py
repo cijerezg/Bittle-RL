@@ -157,13 +157,11 @@ class Policy(nn.Module):
         # Rest of the network
         self.main_attn_block1 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
         self.main_attn_block2 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
+        self.main_attn_block3 = AttentionBlock(device, d_model=hidden_dim, n_heads=8, out_dim=hidden_dim)
 
         self.deep_mu = nn.Linear(128, 64)
         self.deep_log_std = nn.Linear(128, 64)
 
-        # Conv layer to smooth output in temporal dim
-        self.conv_act1 = nn.Conv1d(8, 8, 3, padding=1, groups=8)
-        self.conv_act2 = nn.Conv1d(8, 8, 3, padding=1, groups=8)
         
         self.mu = nn.Linear(128, 8) # 8 frames and each action vector is 8        
         self.log_std = nn.Linear(128, 8) # 8 frames and each action vector is 8
@@ -180,34 +178,36 @@ class Policy(nn.Module):
 
         x, _ = self.main_attn_block1(x)
         x, _ = self.main_attn_block2(x)
+        x, _ = self.main_attn_block3(x)
         
         mu = F.relu(self.deep_mu(x))
         mu = self.mu(x)
 
-        mu = torch.swapaxes(mu, -1, -2)
-        mu = self.conv_act1(mu)
-        mu = self.conv_act2(mu)
-        mu = torch.swapaxes(mu, -1, -2)
+        soft_mu = torch.zeros_like(mu)
+        soft_mu[:, 0, :] = mu[:, 0, :]
+
+        for i in range(1, mu.shape[-2]):
+            soft_mu[:, i, :] = soft_mu[:, i-1, :] * .9 + mu[:, i, :] * .1
 
         log_std = F.relu(self.deep_log_std(x))
         log_std = self.log_std(x)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
         
-        density = Normal(mu, std)
+        density = Normal(soft_mu, std)
         sample = density.rsample()
         sample = self.action_range * torch.tanh(sample / self.action_range)
 
-        return sample, density, mu, std
+        return sample, density, soft_mu, std
 
 
 # device = torch.device('cpu')
     
-# model = Critic(device)
+# # model = Critic(device)
 
-# images = torch.rand(1, 8, 240, 320, 4).to(device) # original sizes were 480 ad 640, but that seems too big.
+# images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
 # joints = torch.rand(1, 8, 8).to(device)
 # dist = torch.rand(1, 8, 1).to(device)
-# action = torch.rand(1, 8, 8, 8).to(device)
+# # action = torch.rand(1, 8, 8).to(device)
 
 
 
@@ -215,24 +215,24 @@ class Policy(nn.Module):
 # model = model.to(device)
 
 
-# model = model.to(device)
-# name = ['Policy']
+# # model = model.to(device)
+# # name = ['Policy']
 
 
-# params = get_params([model], name, [None])
+# # params = get_params([model], name, [None])
 
-# pdb.set_trace()
-
-
-
-# now = time.time()
-# val = model(images, joints, dist, action)
+# # pdb.set_trace()
 
 
 
-# now = time.time()
+# # now = time.time()
+# # val = model(images, joints, dist, action)
+
+
+
+# # now = time.time()
 # out = model(images, joints, dist)
 
 
 
-# print(time.time()-now)
+# # print(time.time()-now)

@@ -3,9 +3,10 @@ from run_policy import Robot
 import pickle
 import numpy as np
 from rl.agent import Actor
-from utils.helpers import get_params, LimitedQueue, save_experiences, load_params
+from utils.helpers import get_params, LimitedQueue, save_experiences, load_params, create_dir
 import torch
 import time
+import os
 
 
 host_ip = '10.56.136.219'
@@ -19,6 +20,10 @@ path_params = 'checkpoints'
 
 
 def main():
+    create_dir(path_exp)
+    create_dir(path_params)
+    
+    
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
     actor = Actor(device)
 
