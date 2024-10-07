@@ -56,7 +56,6 @@ def load_experiences(path):
         files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
         
         for file in files:
-            full_path = os.path.join(path, file)
             data = np.load(full_path)
             exps.append(data)
             Path(full_path).unlink()
