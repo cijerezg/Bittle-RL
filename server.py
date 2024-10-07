@@ -3,7 +3,7 @@ from rl.agent import BittleRL
 from rl.replay_buffer import ReplayBuffer
 from models.architectures import Policy, Critic
 from rl.agent import Actor
-from utils.helpers import get_params, save_params, load_experiences
+from utils.helpers import get_params, save_params, load_experiences, create_dir
 from utils.optimization import reset_params, set_optimizers
 import wandb
 import os
@@ -50,6 +50,9 @@ def main(config=None):
     with wandb.init(project='BittleRL', config=config):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+        create_dir(policy_folder)
+        create_dir(path_exp)
+        
         config = wandb.config
 
         actor = Actor(device)
