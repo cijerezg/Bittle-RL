@@ -79,10 +79,8 @@ class BittleRL(hyper_params):
     def losses(self, params, log_data):
         batch = self.experience_buffer.sample(batch_size=32)
 
-        image = torch.from_numpy(batch.image).to(self.device)
         dist = torch.from_numpy(batch.dist).to(self.device)
         joints = torch.from_numpy(batch.joints).to(self.device)
-        next_image = torch.from_numpy(batch.next_image).to(self.device)
         next_dist = torch.from_numpy(batch.next_dist).to(self.device)
         next_joints = torch.from_numpy(batch.next_joints).to(self.device)
         a = torch.from_numpy(batch.a).to(self.device)
@@ -92,8 +90,8 @@ class BittleRL(hyper_params):
             next_sample, _, next_a, _ = self.actor.run_policy(params, (next_image, next_joints, next_dist))
 
         
-        target_critic_arg = (next_image, next_joints, next_dist, next_a)
-        critic_arg = (image, joints, dist, a)
+        target_critic_arg = (next_joints, next_dist, next_a)
+        critic_arg = (joints, dist, a)
 
         with torch.no_grad():
             q_target = self.eval_critic(target_critic_arg, params,
@@ -106,9 +104,9 @@ class BittleRL(hyper_params):
         critic_loss = F.mse_loss(q.squeeze(), q_target.squeeze())
 
         # Policy loss
-        sample, pdf, mu, std = self.actor.run_policy(params, (image, joints, dist))
+        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist))
 
-        q_pi_arg = (image, joints, dist, sample)
+        q_pi_arg = (joints, dist, sample)
         q_pi = self.eval_critic(q_pi_arg, params)
 
         entropy_term = -torch.clamp(pdf.entropy(), max=MAX_ENTROPY).mean()

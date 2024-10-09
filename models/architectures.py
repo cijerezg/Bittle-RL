@@ -96,9 +96,6 @@ class ConvBlock(nn.Module):
 class Critic(nn.Module):
     def __init__(self, device, action_frames=8, hidden_dim=256, action_hidden_dim=64):
         super().__init__()
-
-        # Image
-        self.conv_block = ConvBlock(hidden_ch=32, embed_dim=256) # all other values are default
         
         # Joints and distance
         self.embed_joints = nn.Linear(8, hidden_dim) # Joints are the servos
@@ -118,16 +115,14 @@ class Critic(nn.Module):
 
         self.action_frames = action_frames
 
-    def forward(self, image, joints, dist, actions):
-        im = self.conv_block(image)
-
+    def forward(self, joints, dist, actions):
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
 
         actions = self.embed_actions(actions)
         actions, _ = self.action_attn_block(actions)
         
-        x = im + joints + dist
+        x = joints + dist
 
         x, _ = self.main_attn_block1(x)
         x, _ = self.main_attn_block2(x)
@@ -146,9 +141,6 @@ class Critic(nn.Module):
 class Policy(nn.Module):
     def __init__(self, device, action_range=5, frames=8, hidden_dim=128):
         super().__init__()
-
-        # Image
-        self.conv_block = ConvBlock(hidden_ch=32, embed_dim=hidden_dim)
 
         # Joints and distance
         self.embed_joints = nn.Linear(8, hidden_dim)
@@ -169,12 +161,11 @@ class Policy(nn.Module):
         self.action_range = action_range
         self.frames = frames
 
-    def forward(self, image, joints, dist):
-        im = self.conv_block(image)
+    def forward(self, joints, dist):
         joints = self.embed_joints(joints)
         dist = self.embed_dist(dist)
 
-        x = im + joints + dist
+        x = joints + dist
 
         x, _ = self.main_attn_block1(x)
         x, _ = self.main_attn_block2(x)
@@ -200,39 +191,39 @@ class Policy(nn.Module):
         return sample, density, soft_mu, std
 
 
-device = torch.device('cpu')
+# device = torch.device('cpu')
     
-# model = Critic(device)
+# # model = Critic(device)
 
-images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
-joints = torch.rand(1, 8, 8).to(device)
-dist = torch.rand(1, 8, 1).to(device)
-# action = torch.rand(1, 8, 8).to(device)
-
-
-
-model = Policy(device)
-model = model.to(device)
+# images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
+# joints = torch.rand(1, 8, 8).to(device)
+# dist = torch.rand(1, 8, 1).to(device)
+# # action = torch.rand(1, 8, 8).to(device)
 
 
+
+# model = Policy(device)
 # model = model.to(device)
-# name = ['Policy']
 
 
-# params = get_params([model], name, [None])
-
-# pdb.set_trace()
-
+# # model = model.to(device)
+# # name = ['Policy']
 
 
-# now = time.time()
-# val = model(images, joints, dist, action)
+# # params = get_params([model], name, [None])
 
-
-
-# now = time.time()
-out = model(images, joints, dist)
+# # pdb.set_trace()
 
 
 
-# print(time.time()-now)
+# # now = time.time()
+# # val = model(images, joints, dist, action)
+
+
+
+# # now = time.time()
+# out = model(images, joints, dist)
+
+
+
+# # print(time.time()-now)

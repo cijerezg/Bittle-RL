@@ -14,8 +14,7 @@ import pdb
 
        
 class ReplayBuffer():
-    def __init__(self, episode_length=100, episodes=50):
-        self.images_buf = np.zeros((episodes, episode_length, 240, 320, 3), dtype=np.float32)
+    def __init__(self, episode_length=100, episodes=10000):
         self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
         self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
         self.a_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)
@@ -28,13 +27,10 @@ class ReplayBuffer():
         if transitions is not None:
 
             for transition in transitions:
-                image = transition['arr_0']
-                image = (image - 125) / 125
                 dist = transition['arr_1'] / 100
                 joints = transition['arr_2']
                 a = transition['arr_3']
                 
-                self.images_buf[self.eps, self.ptr] = np.array(image, dtype=np.float32)
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist
                 self.a_buf[self.eps, self.ptr] = a
@@ -54,10 +50,8 @@ class ReplayBuffer():
 
         reward = -np.abs(self.dist_buf[eps, end_idxs[:, np.newaxis] + 1, :] / 10 -10)
 
-        batch = AttrDict(image=self.images_buf[eps, slice_idxs, :],
-                         joints=self.joints_buf[eps, slice_idxs, :],
+        batch = AttrDict(joints=self.joints_buf[eps, slice_idxs, :],
                          dist=self.dist_buf[eps, slice_idxs, :],
-                         next_image=self.images_buf[eps, slice_idxs+1, :, :],
                          next_joints=self.joints_buf[eps, slice_idxs+1, :],
                          next_dist=self.dist_buf[eps, slice_idxs+1, :],
                          a=self.a_buf[eps, end_idxs[:, np.newaxis], :].squeeze(),

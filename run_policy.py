@@ -1,4 +1,3 @@
-from picamera2 import Picamera2
 import VL53L0X # dist sensor
 import time
 from ardSerial import *
@@ -17,31 +16,20 @@ class Robot():
         self.t=threading.Thread(target=keepCheckingPort, args=(self.goodPorts,))
         self.t.start()
 
-        # Initialize camera
-        self.cam = Picamera2()
-        camera_config = self.cam.create_preview_configuration()
-        camera_config['main']['size'] = (320, 240)
-        self.cam.configure(camera_config)
-        self.cam.start()
-
         # Initialize distance sensor
         self.tof = VL53L0X.VL53L0X(i2c_bus=1, i2c_address=0x29)
         self.tof.open()
         self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
         self.timing = self.tof.get_timing()
 
-    def capture_image(self):
-        return self.cam.capture_array()[:, :, 0:3]
-
     def compute_distance(self):
         return self.tof.get_distance() # distance in mm
 
     def get_action(self, params, state):
-        image, dist, joints = state
-        image = torch.tensor(image, dtype=torch.float32).unsqueeze(0)
-        dist = torch.tensor(dist).unsqueeze(0)
+        joints, dist = state
         joints = torch.tensor(joints).unsqueeze(0)
-        state = (image, dist, joints)
+        dist = torch.tensor(dist).unsqueeze(0)
+        state = (joints, dist)
         
         sample, density, mu, std = self.actor.run_policy(params, state)
         r_action = self.actor.robot_action(sample)
@@ -55,8 +43,4 @@ class Robot():
         closeAllSerial(self.goodPorts)
         self.tof.stop_ranging()
         self.tof.close()
-        self.cam.stop_preview()
-        self.cam.close()
-
-        
         
