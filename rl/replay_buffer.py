@@ -27,9 +27,11 @@ class ReplayBuffer():
         if transitions is not None:
 
             for transition in transitions:
+                joints = transition['arr_0']
                 dist = transition['arr_1'] / 100
-                joints = transition['arr_2']
-                a = transition['arr_3']
+                a = transition['arr_2']
+                # temporary line to reshape action
+                a = a.reshape(8, 8)
                 
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist

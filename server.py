@@ -78,6 +78,7 @@ def main(config=None):
             params = bittle_rl.training_iteration(params, optimizers, transitions)
             
             iterations += 1
+            print(iterations)
 
             if iterations % config.reset_frequency == 0:
                 keys = ['Policy', 'Critic']

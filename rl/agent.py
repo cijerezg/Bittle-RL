@@ -87,7 +87,7 @@ class BittleRL(hyper_params):
         rew = torch.from_numpy(batch.rew).to(self.device)
 
         with torch.no_grad():
-            next_sample, _, next_a, _ = self.actor.run_policy(params, (next_image, next_joints, next_dist))
+            next_sample, _, next_a, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
         
         target_critic_arg = (next_joints, next_dist, next_a)
