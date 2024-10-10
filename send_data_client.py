@@ -18,7 +18,8 @@ def main():
     local_path = 'experiences'
     remote_path = '/home/carlos/Documents/Research/Petoi/Bittle-RL/'
     
-
+    time.sleep(3)
+    
     while True:
         if os.listdir(local_path):
             for file in os.listdir(local_path):

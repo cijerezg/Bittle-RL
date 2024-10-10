@@ -55,10 +55,12 @@ def load_experiences(path):
         files = [os.path.join(path, file) for file in os.listdir(path)]
         files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
         
-        for file in files:
-            data = np.load(file)
+        for exp_file in files:
+            data = np.load(exp_file)
             exps.append(data)
-            Path(file).unlink()
+        for exp_file in files:
+            Path(exp_file).unlink()
+
         return exps
     else:
         return None
@@ -72,7 +74,11 @@ def load_params(path):
     if os.listdir(path):
         for file in os.listdir(path):
             full_path = os.path.join(path, file)
-            params = torch.load(full_path, weights_only=True)
+            try:
+                params = torch.load(full_path, weights_only=True)
+                print('Model read correctly')
+            except RuntimeError:
+                print('Unable to load model. Skipping it')
             Path(full_path).unlink()
         return params
     else:

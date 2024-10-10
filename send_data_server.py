@@ -13,7 +13,8 @@ def main():
     ip = '10.22.54.77'
     local_path = 'checkpoints'
     remote_path = '/home/carlos/Documents/Bittle-RL/'
-    
+
+    time.sleep(3)
 
     while True:
         if os.listdir(local_path):

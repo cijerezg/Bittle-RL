@@ -10,7 +10,7 @@ import os
 from data.skill_library import *
 
 #host_ip = '10.56.136.219' # Liz
-host_ip = 10.1.207.51 # UWM IP
+host_ip = '10.1.207.51' # UWM IP
 
 
 MAX_STEPS = 1000
