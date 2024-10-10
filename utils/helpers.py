@@ -56,9 +56,11 @@ def load_experiences(path):
         files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
         
         for exp_file in files:
-            data = np.load(exp_file)
-            exps.append(data)
-        for exp_file in files:
+            try:
+                data = np.load(exp_file)
+                exps.append(data)
+            except EOFError:
+                print(f'unable to read experience with name {exp_file}')
             Path(exp_file).unlink()
 
         return exps
@@ -78,7 +80,9 @@ def load_params(path):
                 params = torch.load(full_path, weights_only=True)
                 print('Model read correctly')
             except RuntimeError:
-                print('Unable to load model. Skipping it')
+                print('Unable to load model. Skipping it - Runtime')
+            except EOFError:
+                print('Unable to load model. End of file error')
             Path(full_path).unlink()
         return params
     else:
