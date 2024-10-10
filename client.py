@@ -70,11 +70,12 @@ def main():
         
         bittle.execute_action(action)
         step += 1
+
+        if step % 50 == 0:
+            updated_policy = load_params(path_params)
         
-        updated_policy = load_params(path_params)
-        
-        if updated_policy:
-            params['Policy'] = updated_policy
+            if updated_policy:
+                params['Policy'] = updated_policy
     
     
 if __name__ == "__main__":

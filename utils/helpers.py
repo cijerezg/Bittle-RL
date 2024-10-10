@@ -71,20 +71,21 @@ def load_experiences(path):
 def save_params(path, params):
     params = {key: value.cpu() for key, value in params.items()}    
     torch.save(params, f'{path}/params.pt')
+    open(f'{path}/sent_to_disk', 'a').close()
+    
 
 def load_params(path):
     if os.listdir(path):
-        for file in os.listdir(path):
-            full_path = os.path.join(path, file)
-            try:
-                params = torch.load(full_path, weights_only=True)
-                print('Model read correctly')
-            except RuntimeError:
-                print('Unable to load model. Skipping it - Runtime')
-            except EOFError:
-                print('Unable to load model. End of file error')
-            Path(full_path).unlink()
-        return params
+        files = os.listdir(path)
+        if 'sent_to_disk' in files:
+            params = torch.load(f'{path}/params.pt', weights_only=True)
+                        
+            for file in os.listdir(path):
+                full_path = os.path.join(path, file)
+                Path(full_path).unlink()
+            return params
+        else:
+            return None
     else:
         return None
 
