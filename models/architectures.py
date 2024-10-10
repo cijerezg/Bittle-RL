@@ -178,7 +178,7 @@ class Policy(nn.Module):
         soft_mu[:, 0, :] = mu[:, 0, :]
 
         for i in range(1, mu.shape[-2]):
-            soft_mu[:, i, :] = soft_mu[:, i-1, :] * .9 + mu[:, i, :] * .1
+            soft_mu[:, i, :] = soft_mu[:, i-1, :] * .8 + mu[:, i, :] * .2
 
         log_std = F.relu(self.deep_log_std(x))
         log_std = self.log_std(x)

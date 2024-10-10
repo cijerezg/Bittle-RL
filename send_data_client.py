@@ -13,7 +13,8 @@ def shell_cmd(ip, path, file):
     
 
 def main():
-    ip = '192.168.0.155'
+    #ip = '192.168.0.155' # Liz ip
+    ip = '10.1.207.51'# UWM ip
     local_path = 'experiences'
     remote_path = '/home/carlos/Documents/Research/Petoi/Bittle-RL/'
     

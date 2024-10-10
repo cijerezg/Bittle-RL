@@ -7,9 +7,11 @@ from utils.helpers import get_params, LimitedQueue, save_experiences, load_param
 import torch
 import time
 import os
+from data.skill_library import *
 
+#host_ip = '10.56.136.219' # Liz
+host_ip = 10.1.207.51 # UWM IP
 
-host_ip = '10.56.136.219'
 
 MAX_STEPS = 1000
 FRAMES = 8
@@ -50,11 +52,21 @@ def main():
         action, sample_action = bittle.get_action(params, (joints_queue.get_items(),
                                                            dist_queue.get_items()))
 
-        sample_action = sample_action.detach().numpy()
+        if step < 240:
+            idx = np.random.randint(0, len(skills)) # skills come from the skill library
+            action_s = skills[idx]
+            action = [8, 0, 0, 1]
+            action.extend(action_s)
+            sample_action = np.array(action_s, dtype=np.float32)
+            sample_action = sample_action / 25
+        else:
+            action, sample_action = bittle.get_action(params, (joints_queue.get_items(),
+                                                               dist_queue.get_items()))
+            sample_action = sample_action.detach().numpy()
+            
         save_experiences(path_exp, (joints, dist, sample_action), step) 
 
         print(step)
-        print(action[4:4+8])
         
         bittle.execute_action(action)
         step += 1
