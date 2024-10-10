@@ -79,13 +79,15 @@ def load_params(path):
         files = os.listdir(path)
         if 'sent_to_disk' in files:
             params = torch.load(f'{path}/params.pt', weights_only=True)
-                        
-            for file in os.listdir(path):
-                full_path = os.path.join(path, file)
-                Path(full_path).unlink()
-            return params
+            print('Params loaded')
         else:
-            return None
+            params = None
+        for file in os.listdir(path):
+            full_path = os.path.join(path, file)
+            Path(full_path).unlink()
+
+        return params
+
     else:
         return None
 
