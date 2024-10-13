@@ -3,7 +3,7 @@ from run_policy import Robot
 import pickle
 import numpy as np
 from rl.agent import Actor
-from utils.helpers import get_params, LimitedQueue, save_experiences, load_params, create_dir
+from utils.helpers import get_params, save_experiences, load_params, create_dir
 import torch
 import time
 import os
@@ -36,32 +36,29 @@ def main():
     init_joints = [0] * (FRAMES * ACTION_DIM) # because 8 frames are being used
     action.extend(init_joints)
     bittle.execute_action(action)   
-    
-    dist_queue = LimitedQueue((1))
-    joints_queue = LimitedQueue((8))
-    
+        
     step = 0
 
     while step < MAX_STEPS:
         dist = bittle.compute_distance()
         joints = np.array(action[-8:], dtype=np.float32)
 
-        dist_queue.add(np.array([dist], dtype=np.float32))
-        joints_queue.add(joints)
-
-        action, sample_action = bittle.get_action(params, (joints_queue.get_items(),
-                                                           dist_queue.get_items()))
-
-        if step < 240:
-            idx = np.random.randint(0, len(skills)) # skills come from the skill library
+        action, sample_action = bittle.get_action(params, (joints, dist))
+        
+        skill_idx = 0
+                                                
+        if step < len(skills):
+            # idx = np.random.randint(0, len(skills)) # skills come from the skill library
+            idx = skill_idx
+            
+            skill_idx += 1
             action_s = skills[idx]
             action = [8, 0, 0, 1]
             action.extend(action_s)
             sample_action = np.array(action_s, dtype=np.float32)
             sample_action = sample_action / 25
         else:
-            action, sample_action = bittle.get_action(params, (joints_queue.get_items(),
-                                                               dist_queue.get_items()))
+            action, sample_action = bittle.get_action(params, (joints, dist))
             sample_action = sample_action.detach().numpy()
             
         save_experiences(path_exp, (joints, dist, sample_action), step) 
@@ -71,12 +68,13 @@ def main():
         bittle.execute_action(action)
         step += 1
 
-        if step % 50 == 0:
-            updated_policy = load_params(path_params)
+        # if step % 50 == 0:
+        #     updated_policy = load_params(path_params)
         
-            if updated_policy:
-                params['Policy'] = updated_policy
-    
+        #     if updated_policy:
+        #         params['Policy'] = updated_policy
+        bittle.closeAll()
+        
     
 if __name__ == "__main__":
     main()
