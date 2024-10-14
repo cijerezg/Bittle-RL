@@ -50,7 +50,8 @@ def main():
         
                                                 
         if step < MAX_STEPS:
-            idx += 1 % len(skills)
+            idx += 1
+            idx = idx % len(skills)
             
             action_s = skills[idx]
             action = [8, 0, 0, 1]
