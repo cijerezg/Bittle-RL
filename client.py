@@ -13,7 +13,7 @@ from data.skill_library import *
 host_ip = '10.1.207.51' # UWM IP
 
 
-MAX_STEPS = 1000
+MAX_STEPS = 500
 FRAMES = 8
 ACTION_DIM = 8
 
@@ -45,13 +45,11 @@ def main():
 
         action, sample_action = bittle.get_action(params, (joints, dist))
         
-        skill_idx = 0
                                                 
-        if step < len(skills):
-            # idx = np.random.randint(0, len(skills)) # skills come from the skill library
-            idx = skill_idx
+        if step < MAX_STEPS:
+            idx = np.random.randint(0, len(skills)) # skills come from the skill library
             
-            skill_idx += 1
+            
             action_s = skills[idx]
             action = [8, 0, 0, 1]
             action.extend(action_s)
