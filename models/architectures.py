@@ -95,7 +95,7 @@ class Policy(nn.Module):
         mu = self.mu(mu)
 
         for i in range(1, mu.shape[1]):
-            mu[:, i, :] = mu[:, i-1, :] * .7 + mu[:, i, :] * .3
+            mu[:, i, :] = mu[:, i-1, :] * .85 + mu[:, i, :] * .15
         
         log_std = self.log_std(x).reshape(-1, 8, 8)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))

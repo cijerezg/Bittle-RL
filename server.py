@@ -88,7 +88,8 @@ def main(config=None):
                 keys = ['Policy', 'Critic']
                 params, optimizers, agent = reset_params(params, names, optimizers, keys, config.learning_rate)
 
-            save_params(policy_folder, params['Policy'])
+            if iterations & 20 == 0:
+                save_params(policy_folder, params['Policy'])
             
 #if __name__ = "__main__":
 #    val = main()

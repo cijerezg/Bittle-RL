@@ -77,7 +77,7 @@ class BittleRL(hyper_params):
 
 
     def losses(self, params, log_data):
-        batch = self.experience_buffer.sample(batch_size=32)
+        batch = self.experience_buffer.sample(batch_size=128)
 
         dist = torch.from_numpy(batch.dist).to(self.device)
         joints = torch.from_numpy(batch.joints).to(self.device)
