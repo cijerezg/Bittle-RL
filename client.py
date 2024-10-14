@@ -40,6 +40,7 @@ def main():
     step = 0
 
     while step < MAX_STEPS:
+        start = time.time()
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
         joints = np.array(action[-8:], dtype=np.float32)
 
@@ -47,8 +48,7 @@ def main():
         
                                                 
         if step < MAX_STEPS:
-            idx = np.random.randint(0, len(skills)) # skills come from the skill library
-            
+            idx = np.random.randint(0, len(skills)) # skills come from the skill library            
             
             action_s = skills[idx]
             action = [8, 0, 0, 1]
@@ -71,7 +71,9 @@ def main():
         
         #     if updated_policy:
         #         params['Policy'] = updated_policy
-        bittle.closeAll()
+        time.sleep(.05)
+        print(time.time() - start)
+    bittle.closeAll()
         
     
 if __name__ == "__main__":
