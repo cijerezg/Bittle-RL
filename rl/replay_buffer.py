@@ -42,17 +42,17 @@ class ReplayBuffer():
                     self.eps += 1
         
 
-    def sample(self, batch_size=32):
+    def sample(self, batch_size=128):
         idxs = np.random.randint(0, self.max_steps - 1, size=batch_size)
         idxs = idxs[:, np.newaxis]
         eps = np.random.randint(0, self.eps, size=batch_size)
+        eps = eps[:, np.newaxis]
+        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] / 10 -20)
 
-        reward = -np.abs(self.dist_buf[eps, idxs[:, np.newaxis] + 1, :] / 10 -20)
-
-        batch = AttrDict(joints=self.joints_buf[eps, idxs, :],
-                         dist=self.dist_buf[eps, idxs, :],
-                         next_joints=self.joints_buf[eps, idxs+1, :],
-                         next_dist=self.dist_buf[eps, idxs+1, :],
+        batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
+                         dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),
+                         next_joints=self.joints_buf[eps, idxs+1, :].squeeze(),
+                         next_dist=self.dist_buf[eps, idxs+1, :].squeeze(axis=1),
                          a=self.a_buf[eps, idxs, :].squeeze(),
                          rew=reward.squeeze())
 

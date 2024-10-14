@@ -25,7 +25,7 @@ wandb.login()
 data_folder = 'Data'
 policy_folder = 'checkpoints'
 path_exp = 'experiences'
-path_init_exp = 'init_experiences'
+path_init_exp = 'init-experiences'
 
 
 config = {
