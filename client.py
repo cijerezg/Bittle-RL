@@ -40,7 +40,7 @@ def main():
     step = 0
 
     while step < MAX_STEPS:
-        dist = bittle.compute_distance()
+        dist = np.array(bittle.compute_distance(), dtype=np.float32)
         joints = np.array(action[-8:], dtype=np.float32)
 
         action, sample_action = bittle.get_action(params, (joints, dist))

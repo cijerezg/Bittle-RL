@@ -90,7 +90,7 @@ class Policy(nn.Module):
         x = F.relu(self.deep_layer1(x))
         x = F.relu(self.deep_layer2(x))
 
-        mu = x.reshape(-1, 8, 8)
+        mu = x.reshape(-1, 64, 4)
         mu = F.relu(self.out_mu(mu))
         mu = self.mu(mu)
 
