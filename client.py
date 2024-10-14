@@ -38,7 +38,9 @@ def main():
     bittle.execute_action(action)   
         
     step = 0
+    idx = 0
 
+    
     while step < MAX_STEPS:
         start = time.time()
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
@@ -48,7 +50,7 @@ def main():
         
                                                 
         if step < MAX_STEPS:
-            idx = np.random.randint(0, len(skills)) # skills come from the skill library            
+            idx += 1 % len(skills)
             
             action_s = skills[idx]
             action = [8, 0, 0, 1]
