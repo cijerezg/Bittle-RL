@@ -35,7 +35,7 @@ class Actor():
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()
         sample = 20 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        sample = np.pad(sample, ((8, 4), (0, 0)), mode='constant', constant_values=0)        
+        sample = np.pad(sample, ((0, 0), (8, 4)), mode='constant', constant_values=0)        
         sample = sample.flatten().astype(np.float32).tolist()
         r_action.extend(sample)
         
