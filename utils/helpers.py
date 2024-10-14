@@ -48,7 +48,7 @@ def save_experiences(path, transition, step):
     np.savez(f'{path}/transition_{step}.npz', *transition)
        
 
-def load_experiences(path):
+def load_experiences(path, delete=True):
     if os.listdir(path):
         exps = []
 
@@ -61,7 +61,8 @@ def load_experiences(path):
                 exps.append(data)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
-            Path(exp_file).unlink()
+            if delete:
+                Path(exp_file).unlink()
 
         return exps
     else:

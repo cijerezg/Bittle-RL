@@ -13,7 +13,7 @@ from data.skill_library import *
 host_ip = '10.1.207.51' # UWM IP
 
 
-MAX_STEPS = 500
+MAX_STEPS = 800
 FRAMES = 8
 ACTION_DIM = 8
 
@@ -38,29 +38,27 @@ def main():
     bittle.execute_action(action)   
         
     step = 0
-    idx = 0
 
     
     while step < MAX_STEPS:
-        start = time.time()
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
         joints = np.array(action[-8:], dtype=np.float32)
 
         action, sample_action = bittle.get_action(params, (joints, dist))
         
                                                 
-        if step < MAX_STEPS:
-            idx += 1
-            idx = idx % len(skills)
+        # if step < MAX_STEPS:
+        #     idx += 1
+        #     idx = idx % len(skills)
             
-            action_s = skills[idx]
-            action = [8, 0, 0, 1]
-            action.extend(action_s)
-            sample_action = np.array(action_s, dtype=np.float32)
-            sample_action = sample_action / 25
-        else:
-            action, sample_action = bittle.get_action(params, (joints, dist))
-            sample_action = sample_action.detach().numpy()
+        #     action_s = skills[idx]
+        #     action = [8, 0, 0, 1]
+        #     action.extend(action_s)
+        #     sample_action = np.array(action_s, dtype=np.float32)
+        #     sample_action = sample_action / 25
+        # else:
+        #     action, sample_action = bittle.get_action(params, (joints, dist))
+        sample_action = sample_action.detach().numpy()
             
         save_experiences(path_exp, (joints, dist, sample_action), step) 
 
@@ -69,13 +67,12 @@ def main():
         bittle.execute_action(action)
         step += 1
 
-        # if step % 50 == 0:
-        #     updated_policy = load_params(path_params)
+        if step % 20 == 0:
+            updated_policy = load_params(path_params)
         
-        #     if updated_policy:
-        #         params['Policy'] = updated_policy
+            if updated_policy:
+                params['Policy'] = updated_policy
         time.sleep(.01)
-        print(time.time() - start)
     bittle.closeAll()
         
     

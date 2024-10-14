@@ -28,6 +28,6 @@ def main():
                 subprocess.run(cmd, shell=True)
                 subprocess.run(f'rm {local_file}', shell=True)
 
-        time.sleep(120)
+        time.sleep(15)
         
 main()
