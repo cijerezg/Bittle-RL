@@ -72,7 +72,7 @@ def main():
         
             if updated_policy:
                 params['Policy'] = updated_policy
-        time.sleep(.01)
+        time.sleep(.05)
     bittle.closeAll()
         
     
