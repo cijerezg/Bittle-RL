@@ -39,14 +39,16 @@ def main():
     for i in range(4):
         aux_act = action.tolist()
         bittle.execute_action(prefix_action.extend(aux_act))
-        time.sleep(.2)
+        time.sleep(.4)
         action += inc
 
     step = 0
+    sample_action = np.zeros((1, 8))
+
     
     while step < MAX_STEPS:
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
-        joints = np.array(action[-8:], dtype=np.float32)
+        joints = np.array(sample_action[-1, :], dtype=np.float32)
 
         action, sample_action = bittle.get_action(params, (joints, dist))
         
