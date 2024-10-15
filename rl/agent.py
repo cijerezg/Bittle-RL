@@ -28,14 +28,13 @@ class Actor():
         return sample, density, mu, std
 
     def robot_action(self, sample):
-        r_action = [-8, 0, 0, 1,
-                    0, 7, 1] # 8 frames; 0 pitch; 0 roll; angle multiplier is 1
-        # the 0, 7, 1 is because it starts with frame 0 until frame 7, and it is run once (one loop)
-
+        r_action = [8, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()
-        sample = 20 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        sample = np.pad(sample, ((0, 0), (8, 4)), mode='constant', constant_values=0)        
+        sample = 10 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
+        offset = np.array([25, 25, 25, 25, 30, 30, 30, 30])
+        offset = offset[np.newaxis, :]
+        sample = sample + offset        
         sample = sample.flatten().astype(np.float32).tolist()
         r_action.extend(sample)
         

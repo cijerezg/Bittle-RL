@@ -32,13 +32,16 @@ def main():
     params = get_params(model, name, pretrained_params)
 
     bittle = Robot(actor)
-    action = [FRAMES, 0, 0, 1]
-    init_joints = [0] * (FRAMES * ACTION_DIM) # because 8 frames are being used
-    action.extend(init_joints)
-    bittle.execute_action(action)   
-        
-    step = 0
+    prefix_action = [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+    action = np.zeros(8)
+    inc = np.array([8.3, 8.3, 8.3, 8.3, 10, 10, 10, 10])
+    
+    for i in range(4):
+        aux_act = action.tolist()
+        bittle.execute_action(prefix_action.extend(aux_act))
+        action += inc
 
+    step = 0
     
     while step < MAX_STEPS:
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
