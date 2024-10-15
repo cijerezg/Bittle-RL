@@ -51,7 +51,6 @@ def save_experiences(path, transition, step):
 def load_experiences(path, delete=True):
     if os.listdir(path):
         exps = []
-
         files = [os.path.join(path, file) for file in os.listdir(path)]
         files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
         

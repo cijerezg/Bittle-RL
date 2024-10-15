@@ -28,10 +28,13 @@ class ReplayBuffer():
 
             for transition in transitions:
                 joints = transition['arr_0']
-                dist = transition['arr_1'] / 100
+                dist = transition['arr_1'] / 100                
                 a = transition['arr_2']
                 # temporary line to reshape action
-                a = a.reshape(8, 8)
+                try:
+                    a = a.reshape(8, 8)
+                except ValueError:
+                    pdb.set_trace()
                 
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist

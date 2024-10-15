@@ -64,7 +64,7 @@ def main():
         #     sample_action = sample_action / 25
         # else:
         #     action, sample_action = bittle.get_action(params, (joints, dist))
-        sample_action = sample_action.detach().numpy()
+        sample_action = sample_action.detach().numpy().squeeze()
             
         save_experiences(path_exp, (joints, dist, sample_action), step) 
 

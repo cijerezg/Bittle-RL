@@ -83,7 +83,6 @@ class Policy(nn.Module):
     def forward(self, joints, dist):
         embedded_joints = F.relu(self.embed_joints(joints))
         dist = F.relu(self.embed_dist(dist))
-
         x = embedded_joints + dist
 
         x = F.relu(self.deep_layer1(x))
@@ -93,10 +92,10 @@ class Policy(nn.Module):
         mu = F.relu(self.out_mu(mu))
         mu = self.mu(mu)
 
-        mu[:, 0, :] = joints * 0.65 + mu[:, 0, :] * .35
+        mu[:, 0, :] = joints * 0.80 + mu[:, 0, :] * .20
         
         for i in range(1, mu.shape[1]):
-            mu[:, i, :] = mu[:, i-1, :] * .65 + mu[:, i, :] * .35
+            mu[:, i, :] = mu[:, i-1, :] * .80 + mu[:, i, :] * .20
         
         log_std = self.log_std(x).reshape(-1, 8, 8)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
@@ -113,14 +112,14 @@ class Policy(nn.Module):
 # # model = Critic(device)
 
 # images = torch.rand(1, 8, 240, 320, 3).to(device) # original sizes were 480 ad 640, but that seems too big.
-# joints = torch.rand(1, 8, 8).to(device)
-# dist = torch.rand(1, 8, 1).to(device)
+#joints = torch.rand(8).to(device)
+#dist = torch.rand(1).to(device)
 # # action = torch.rand(1, 8, 8).to(device)
 
 
 
 # model = Policy(device)
-# model = model.to(device)
+#model = model.to(device)
 
 
 # # model = model.to(device)
@@ -139,7 +138,7 @@ class Policy(nn.Module):
 
 
 # # now = time.time()
-# out = model(images, joints, dist)
+#out = model(joints, dist)
 
 
 

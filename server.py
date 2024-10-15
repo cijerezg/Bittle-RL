@@ -25,7 +25,7 @@ wandb.login()
 data_folder = 'Data'
 policy_folder = 'checkpoints'
 path_exp = 'experiences'
-path_init_exp = 'init_experiences'
+path_init_exp = 'init-experiences'
 
 config = {
     'device': torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
@@ -66,19 +66,18 @@ def main(config=None):
         pretrained_models = [None, None, None]
 
         params = get_params(models, names, pretrained_models)
-        pdb.set_trace()
 
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
 
-        init_transitions = load_experiences(path_init_exp)
+        init_transitions = load_experiences(path_init_exp, delete=False)
         bittle_rl.experience_buffer.add(init_transitions)
         
         iterations = 0
                                                 
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
-    
+            pdb.set_trace()
             params = bittle_rl.training_iteration(params, optimizers, transitions)
             
             iterations += 1
