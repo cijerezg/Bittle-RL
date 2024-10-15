@@ -3,7 +3,7 @@ from torch.optim import Adam
 import copy
 import torch.nn as nn
 import time
-
+import pdb
 
 
 def Adam_update(params, losses, keys, optimizers):
@@ -24,7 +24,7 @@ def set_optimizers(params, keys, lr):
     return optimizers
 
 
-def reset_params(agent, params, optimizers, keys, lr):
+def reset_params(agent, params, names, optimizers, keys, lr):
     for key in keys:
         for name, param in params[key].items():
             if 'bias' in name:

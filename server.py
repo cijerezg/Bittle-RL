@@ -25,7 +25,7 @@ wandb.login()
 data_folder = 'Data'
 policy_folder = 'checkpoints'
 path_exp = 'experiences'
-
+path_init_exp = 'init_experiences'
 
 config = {
     'device': torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
@@ -38,7 +38,7 @@ config = {
     'discount': 0.97,
     'gradient_steps': 8,
 
-    'reset_frequency': 2000,
+    'reset_frequency': 1,
     'delta_entropy': 25,
     'load_pretrained_models': False,
     'max_iterations': 10000
@@ -66,10 +66,14 @@ def main(config=None):
         pretrained_models = [None, None, None]
 
         params = get_params(models, names, pretrained_models)
+        pdb.set_trace()
 
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
-            
+
+        init_transitions = load_experiences(path_init_exp)
+        bittle_rl.experience_buffer.add(init_transitions)
+        
         iterations = 0
                                                 
         while iterations < config.max_iterations:
@@ -82,7 +86,7 @@ def main(config=None):
 
             if iterations % config.reset_frequency == 0:
                 keys = ['Policy', 'Critic']
-                params, optimizers, agent = reset_params(params, names, optimizers, keys, config.learning_rate)
+                params, optimizers, agent = reset_params(bittle_rl, params, names, optimizers, keys, config.learning_rate)
 
             if iterations & 20 == 0:
                 save_params(policy_folder, params['Policy'])
