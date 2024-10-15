@@ -25,7 +25,6 @@ wandb.login()
 data_folder = 'Data'
 policy_folder = 'checkpoints'
 path_exp = 'experiences'
-path_init_exp = 'init-experiences'
 
 
 config = {
@@ -72,10 +71,7 @@ def main(config=None):
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
             
         iterations = 0
-        
-        init_transitions = load_experiences(path_init_exp, delete=False)
-        bittle_rl.experience_buffer.add(init_transitions)
-                                        
+                                                
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
     

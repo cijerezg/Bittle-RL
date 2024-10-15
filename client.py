@@ -13,7 +13,7 @@ from data.skill_library import *
 host_ip = '10.1.207.51' # UWM IP
 
 
-MAX_STEPS = 800
+MAX_STEPS = 1000
 FRAMES = 8
 ACTION_DIM = 8
 
@@ -78,7 +78,6 @@ def main():
         
             if updated_policy:
                 params['Policy'] = updated_policy
-        time.sleep(.05)
     bittle.closeAll()
         
     
