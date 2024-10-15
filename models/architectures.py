@@ -81,10 +81,10 @@ class Policy(nn.Module):
 
 
     def forward(self, joints, dist):
-        joints = F.relu(self.embed_joints(joints))
+        embedded_joints = F.relu(self.embed_joints(joints))
         dist = F.relu(self.embed_dist(dist))
 
-        x = joints + dist
+        x = embedded_joints + dist
 
         x = F.relu(self.deep_layer1(x))
         x = F.relu(self.deep_layer2(x))

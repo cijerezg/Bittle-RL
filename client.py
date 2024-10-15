@@ -39,6 +39,7 @@ def main():
     for i in range(4):
         aux_act = action.tolist()
         bittle.execute_action(prefix_action.extend(aux_act))
+        time.sleep(.2)
         action += inc
 
     step = 0
