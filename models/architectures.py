@@ -11,7 +11,7 @@ import math
 from utils.helpers import get_params
 import time
 
-LOG_STD_MAX = 1
+LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
 
@@ -93,10 +93,10 @@ class Policy(nn.Module):
         mu = F.relu(self.out_mu(mu))
         mu = self.mu(mu)
 
-        mu[:, 0, :] = joints * 0.75 + mu[:, 0, :] * .25
+        mu[:, 0, :] = joints * 0.65 + mu[:, 0, :] * .35
         
         for i in range(1, mu.shape[1]):
-            mu[:, i, :] = mu[:, i-1, :] * .75 + mu[:, i, :] * .25
+            mu[:, i, :] = mu[:, i-1, :] * .65 + mu[:, i, :] * .35
         
         log_std = self.log_std(x).reshape(-1, 8, 8)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
