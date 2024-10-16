@@ -23,7 +23,7 @@ class Robot():
         self.timing = self.tof.get_timing()
 
     def compute_distance(self):
-        return self.tof.get_distance() # distance in mm
+        return self.tof.get_distance() / 100 # Original distance is in mm, but since it is divided 100, it becomes dm (decimeters)
 
     def get_action(self, params, state):
         joints, dist = state
@@ -36,7 +36,7 @@ class Robot():
         return r_action, sample
 
     def execute_action(self, action):
-        task = ['K', action, 1]
+        task = ['K', action, .25] # 0.16 This is the time it runs the action for 
         send(self.goodPorts, task)
 
     def closeAll(self):

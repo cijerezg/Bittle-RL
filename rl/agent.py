@@ -35,7 +35,7 @@ class Actor():
         offset = np.array([25, 25, 25, 25, 30, 30, 30, 30])
         offset = offset[np.newaxis, :]
         sample = sample + offset        
-        sample = sample.flatten().astype(np.float32).tolist()
+        sample = sample.flatten().astype(np.in32).tolist()
         r_action.extend(sample)
         
         return r_action

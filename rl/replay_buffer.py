@@ -25,16 +25,12 @@ class ReplayBuffer():
     
     def add(self, transitions):
         if transitions is not None:
-
             for transition in transitions:
                 joints = transition['arr_0']
-                dist = transition['arr_1'] / 100                
+                dist = transition['arr_1'] # Recall distance is in dm (decimeters)
                 a = transition['arr_2']
                 # temporary line to reshape action
-                try:
-                    a = a.reshape(8, 8)
-                except ValueError:
-                    pdb.set_trace()
+                a = a.reshape(8, 8)
                 
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist
@@ -50,7 +46,7 @@ class ReplayBuffer():
         idxs = idxs[:, np.newaxis]
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
-        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] / 10 -20)
+        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] - 2)
 
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),
