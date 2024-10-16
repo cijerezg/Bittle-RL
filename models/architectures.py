@@ -92,11 +92,6 @@ class Policy(nn.Module):
         mu = F.relu(self.out_mu(mu))
         mu = self.mu(mu)
 
-        mu[:, 0, :] = joints * 0.80 + mu[:, 0, :] * .20
-        
-        for i in range(1, mu.shape[1]):
-            mu[:, i, :] = mu[:, i-1, :] * .80 + mu[:, i, :] * .20
-        
         log_std = self.log_std(x).reshape(-1, 8, 8)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
         
@@ -104,7 +99,13 @@ class Policy(nn.Module):
         sample = density.rsample()
         sample = self.action_range * torch.tanh(sample / self.action_range)
 
-        return sample, density, mu, std
+        smooth_sample = sample.clone().detach()
+        smooth_sample[:, 0, :] = joints * 0.85 + smooth_sample[:, 0, :] * .15
+
+        for i in range(1, smooth_sample.shape[1]):
+            smooth_sample[:, i, :] = smooth_sample[:, i-1, :] * .85 + smooth_sample[:, i, :] * .15
+
+        return sample, density, mu, std, smooth_sample
 
 
 # device = torch.device('cpu')

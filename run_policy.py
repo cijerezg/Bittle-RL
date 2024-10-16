@@ -31,12 +31,12 @@ class Robot():
         dist = torch.tensor(dist).unsqueeze(0)
         state = (joints, dist)
         
-        sample, density, mu, std = self.actor.run_policy(params, state)
-        r_action = self.actor.robot_action(sample)
+        sample, density, mu, std, smooth_sample = self.actor.run_policy(params, state)
+        r_action = self.actor.robot_action(smooth_sample)
         return r_action, sample
 
     def execute_action(self, action):
-        task = ['K', action, 0.1]
+        task = ['K', action, 1]
         send(self.goodPorts, task)
 
     def closeAll(self):

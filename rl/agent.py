@@ -24,8 +24,8 @@ class Actor():
         self.max_angle = 125
 
     def run_policy(self, params, x):
-        sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
-        return sample, density, mu, std
+        sample, density, mu, std, smooth_sample = functional_call(self.policy, params['Policy'], x)
+        return sample, density, mu, std, smooth_sample
 
     def robot_action(self, sample):
         r_action = [8, 0, 0, 1]
@@ -90,10 +90,10 @@ class BittleRL(hyper_params):
         rew = torch.from_numpy(batch.rew).to(self.device)
 
         with torch.no_grad():
-            next_sample, _, next_a, _ = self.actor.run_policy(params, (next_joints, next_dist))
+            next_sample, _, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
         
-        target_critic_arg = (next_joints, next_dist, next_a)
+        target_critic_arg = (next_joints, next_dist, next_sample)
         critic_arg = (joints, dist, a)
 
         with torch.no_grad():
@@ -107,7 +107,7 @@ class BittleRL(hyper_params):
         critic_loss = F.mse_loss(q.squeeze(), q_target.squeeze())
 
         # Policy loss
-        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist))
+        sample, pdf, mu, std, _ = self.actor.run_policy(params, (joints, dist))
 
         q_pi_arg = (joints, dist, sample)
         q_pi = self.eval_critic(q_pi_arg, params)
