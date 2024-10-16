@@ -36,7 +36,7 @@ class Robot():
         return r_action, sample
 
     def execute_action(self, action):
-        task = ['K', action, .25] # 0.16 This is the time it runs the action for 
+        task = ['K', action, .2] # 0.16 This is the time it runs the action for 
         send(self.goodPorts, task)
 
     def closeAll(self):

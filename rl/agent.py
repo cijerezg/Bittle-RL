@@ -28,14 +28,15 @@ class Actor():
         return sample, density, mu, std, smooth_sample
 
     def robot_action(self, sample):
-        r_action = [8, 0, 0, 1]
+        r_action = [24, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()
         sample = 12 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([25, 25, 25, 25, 30, 30, 30, 30])
         offset = offset[np.newaxis, :]
-        sample = sample + offset        
-        sample = sample.flatten().astype(np.in32).tolist()
+        sample = sample + offset
+        sample = np.pad(sample, ((0, 16), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
+        sample = sample.flatten().astype(np.int32).tolist()
         r_action.extend(sample)
         
         return r_action

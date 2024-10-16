@@ -38,10 +38,10 @@ config = {
     'discount': 0.97,
     'gradient_steps': 8,
 
-    'reset_frequency': 1,
+    'reset_frequency': 1000,
     'delta_entropy': 25,
     'load_pretrained_models': False,
-    'max_iterations': 10000
+    'max_iterations': 40000
 }
 
     
@@ -77,7 +77,6 @@ def main(config=None):
                                                 
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
-            pdb.set_trace()
             params = bittle_rl.training_iteration(params, optimizers, transitions)
             
             iterations += 1
