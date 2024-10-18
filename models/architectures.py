@@ -11,7 +11,7 @@ import math
 from utils.helpers import get_params
 import time
 
-LOG_STD_MAX = 0.5
+LOG_STD_MAX = 1
 LOG_STD_MIN = -20
 
 
@@ -94,13 +94,20 @@ class Policy(nn.Module):
         self.action_range = action_range
 
 
+        self.embed_joints_n = nn.LayerNorm(hidden_dim)
+        self.embed_dist_n = nn.LayerNorm(hidden_dim)
+
+        self.deep_layer1_n = nn.LayerNorm(hidden_dim)
+        self.deep_layer2_n = nn.LayerNorm(hidden_dim)
+        
+
     def forward(self, joints, dist):
-        embedded_joints = F.relu(self.embed_joints(joints))
-        dist = F.relu(self.embed_dist(dist))
+        embedded_joints = self.embed_joints_n(F.relu(self.embed_joints(joints)))
+        dist = self.embed_dist_n(F.relu(self.embed_dist(dist)))
         x = embedded_joints + dist
 
-        x = F.relu(self.deep_layer1(x))
-        x = F.relu(self.deep_layer2(x))
+        x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
+        x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
 
         mu = x.reshape(-1, 32, 4)
         mu = F.relu(self.out_mu(mu))

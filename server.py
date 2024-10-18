@@ -39,7 +39,7 @@ config = {
     'gradient_steps': 4,
 
     'reset_frequency': 20002,
-    'delta_entropy': 0.5,
+    'delta_entropy': 5,
     'load_pretrained_models': False,
     'max_iterations': 20000
 }
@@ -74,7 +74,7 @@ def main(config=None):
             init_transitions = load_experiences(f'{path_init_exp}{i}', delete=False)
             bittle_rl.experience_buffer.add(init_transitions)
 
-        init_transitions = load_experiences('experiences_library', detele=False)
+        init_transitions = load_experiences('experiences_library', delete=False)
         bittle_rl.experience_buffer.add(init_transitions)
         
         iterations = 0
@@ -84,7 +84,7 @@ def main(config=None):
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations)
             
             iterations += 1
-            if iterations % 50 == 0:
+            if iterations % 200 == 0:
                 print(iterations)
 
             if iterations % config.reset_frequency == 0:

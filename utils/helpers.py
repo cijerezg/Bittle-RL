@@ -65,7 +65,6 @@ def load_experiences(path, delete=True):
                 print(f'unable to read experience with name {exp_file}')
             if delete:
                 Path(exp_file).unlink()
-        pdb.set_trace()
 
         return exps
     else:

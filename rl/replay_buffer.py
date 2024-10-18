@@ -28,6 +28,7 @@ class ReplayBuffer():
             for transition in transitions:
                 joints = transition['arr_0']
                 dist = transition['arr_1'] # Recall distance is in dm (decimeters)
+                dist = np.clip(dist, 0, 25)
                 a = transition['arr_2']
                 # temporary line to reshape action
                 a = a.reshape(8, 8)

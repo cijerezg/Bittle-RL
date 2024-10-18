@@ -86,6 +86,7 @@ class BittleRL(hyper_params):
         a = torch.from_numpy(batch.a).to(self.device)
         rew = torch.from_numpy(batch.rew).to(self.device)
 
+
         with torch.no_grad():
             next_sample, _, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
@@ -114,7 +115,7 @@ class BittleRL(hyper_params):
         alpha_skill = torch.exp(self.log_alpha_skill).detach()
         entropy_loss = alpha_skill * entropy_term
 
-        policy_loss = -q_pi.mean() - entropy_loss.mean()
+        policy_loss = -q_pi.mean() #- entropy_loss.mean()
 
         if log_data:
             current_eps = self.experience_buffer.eps
@@ -146,7 +147,7 @@ class BittleRL(hyper_params):
                 wandb.log({log_name: wandb.Histogram(log_val['S'])})
 
             
-        self.update_log_alpha(entropy_term)
+        #self.update_log_alpha(entropy_term)
 
         return policy_loss, critic_loss
 
