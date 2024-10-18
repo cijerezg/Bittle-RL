@@ -9,8 +9,8 @@ def shell_cmd(ip, path, file):
     
 
 def main():
-    # ip = '192.168.0.241' Liz ip
-    ip = '10.22.134.36'
+    ip = '192.168.0.102' #Liz ip
+    #ip = '10.22.134.36'
     local_path = 'checkpoints'
     remote_path = '/home/carlos/Documents/Bittle-RL/'
 
@@ -28,6 +28,6 @@ def main():
                 subprocess.run(cmd, shell=True)
                 subprocess.run(f'rm {local_file}', shell=True)
 
-        time.sleep(15)
+        time.sleep(10)
         
 main()

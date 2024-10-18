@@ -57,11 +57,15 @@ def load_experiences(path, delete=True):
         for exp_file in files:
             try:
                 data = np.load(exp_file)
+                dt_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+                if 'init' not in path:
+                    np.save(f'experiences_library/a_{dt_string}.npz')
                 exps.append(data)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
             if delete:
                 Path(exp_file).unlink()
+        pdb.set_trace()
 
         return exps
     else:

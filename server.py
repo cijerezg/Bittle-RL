@@ -36,12 +36,12 @@ config = {
     'action_range': 4,
     'learning_rate': 3e-4,
     'discount': 0.97,
-    'gradient_steps': 8,
+    'gradient_steps': 4,
 
-    'reset_frequency': 1000,
-    'delta_entropy': 25,
+    'reset_frequency': 20002,
+    'delta_entropy': 0.5,
     'load_pretrained_models': False,
-    'max_iterations': 40000
+    'max_iterations': 20000
 }
 
     
@@ -54,7 +54,7 @@ def main(config=None):
         create_dir(path_exp)
         
         config = wandb.config
-
+        
         actor = Actor(device)
         critic = Critic(device).to(device)
 
@@ -70,17 +70,22 @@ def main(config=None):
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
 
-        init_transitions = load_experiences(path_init_exp, delete=False)
+        for i in range(1, 4):
+            init_transitions = load_experiences(f'{path_init_exp}{i}', delete=False)
+            bittle_rl.experience_buffer.add(init_transitions)
+
+        init_transitions = load_experiences('experiences_library', detele=False)
         bittle_rl.experience_buffer.add(init_transitions)
         
         iterations = 0
                                                 
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
-            params = bittle_rl.training_iteration(params, optimizers, transitions)
+            params = bittle_rl.training_iteration(params, optimizers, transitions, iterations)
             
             iterations += 1
-            print(iterations)
+            if iterations % 50 == 0:
+                print(iterations)
 
             if iterations % config.reset_frequency == 0:
                 keys = ['Policy', 'Critic']

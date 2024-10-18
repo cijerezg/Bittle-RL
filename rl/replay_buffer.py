@@ -46,7 +46,8 @@ class ReplayBuffer():
         idxs = idxs[:, np.newaxis]
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
-        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] - 2)
+        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] - 3) / 5 + .5
+        reward = np.clip(reward, -2.5, 2.5)
 
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),

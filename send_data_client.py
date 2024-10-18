@@ -21,15 +21,17 @@ def main():
     time.sleep(3)
     
     while True:
-        if os.listdir(local_path):
-            for file in os.listdir(local_path):
+        if os.listdir(local_path):            
+            files = os.listdir(local_path)
+            files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
+
+            for file in files:
                 local_file = os.path.join(local_path, file)
                 remote_file = os.path.join(remote_path, local_file)
                 cmd = shell_cmd(ip, remote_file, local_file)
                 subprocess.run(cmd, shell=True) 
-                subprocess.run(f'rm {local_file}', shell=True)                
-        else:
-            time.sleep(1)
+                subprocess.run(f'rm {local_file}', shell=True)
+        time.sleep(.1)
                 
         
 main()

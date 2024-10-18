@@ -50,11 +50,7 @@ class BittleRL(hyper_params):
         self.experience_buffer = experience_buffer
         self.actor = actor
         self.critic = critic
-        self.reward_per_episode = 0
-        self.total_episode_counter = 0
-        self.reward_logger = []
-        self.log_data = 0
-        self.log_data_freq = 512 # data is logged every 512 steps
+        self.log_data_freq = 200 # data is logged every 512 steps
 
         self.log_alpha_skill = torch.tensor(INIT_LOG_ALPHA, dtype=torch.float32,
                                             requires_grad=True, device=self.device)
@@ -62,15 +58,15 @@ class BittleRL(hyper_params):
         self.optimizer_alpha_skill = Adam([self.log_alpha_skill], lr=args.learning_rate)
         
 
-    def training_iteration(self, params, optimizers, transition):
+    def training_iteration(self, params, optimizers, transition, iterations):
         self.experience_buffer.add(transition)
 
-        log_data = True if self.log_data & self.log_data_freq == 0 else False
+        log_data = True if iterations % self.log_data_freq == 0 else False
 
         if self.experience_buffer.eps >= 1:
             for i in range(self.gradient_steps):
                 log_data = log_data if i == 0 else False
-                policy_loss, critic_loss = self.losses(params, log_data)
+                policy_loss, critic_loss = self.losses(params, log_data, iterations)
                 losses = [policy_loss, critic_loss]
                 keys = ['Policy', 'Critic']
                 params = Adam_update(params, losses, keys, optimizers)
@@ -80,8 +76,8 @@ class BittleRL(hyper_params):
         return params
 
 
-    def losses(self, params, log_data):
-        batch = self.experience_buffer.sample(batch_size=128)
+    def losses(self, params, log_data, iterations):
+        batch = self.experience_buffer.sample(batch_size=256)
 
         dist = torch.from_numpy(batch.dist).to(self.device)
         joints = torch.from_numpy(batch.joints).to(self.device)
@@ -102,6 +98,7 @@ class BittleRL(hyper_params):
                                         target_critic=True)
         
         q_target = rew + (self.discount * q_target.squeeze())
+        q_target = torch.clamp(q_target, min=-100, max=100)
 
         q = self.eval_critic(critic_arg, params)
 
@@ -113,12 +110,42 @@ class BittleRL(hyper_params):
         q_pi_arg = (joints, dist, sample)
         q_pi = self.eval_critic(q_pi_arg, params)
 
-        entropy_term = -torch.clamp(pdf.entropy(), max=MAX_ENTROPY).mean()
+        entropy_term = torch.clamp(pdf.entropy(), max=MAX_ENTROPY).mean()
         alpha_skill = torch.exp(self.log_alpha_skill).detach()
         entropy_loss = alpha_skill * entropy_term
 
-        policy_loss = q_pi.mean() + entropy_loss.mean()
+        policy_loss = -q_pi.mean() - entropy_loss.mean()
 
+        if log_data:
+            current_eps = self.experience_buffer.eps
+            last_return = -np.abs(self.experience_buffer.dist_buf[current_eps - 1, :] - 3) / 5 + .5
+            wandb.log({'Last_return': last_return.mean()}, step=iterations)
+            
+            
+            wandb.log(
+                {
+                    'Sampled_reward': rew.mean().detach().cpu(),
+                    'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
+                    'Entropy_loss': entropy_term.detach().cpu(),
+
+                    'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 30].detach().cpu()),
+                    'Critic/Mean_Q_value': q.mean().detach().cpu(),
+                    'Critic/Critic_loss': critic_loss.detach().cpu(),
+
+                    'Policy/q_pi': q_pi.mean().detach().cpu(),
+                    'Policy/entropy_loss': entropy_loss.mean().detach().cpu(),
+                    'Policy/mu_over_time': wandb.Histogram(sample[:,:,0].detach().cpu()),
+                    'Policy/mu_over_joints': wandb.Histogram(sample[:,0,:].detach().cpu()),
+                    'Policy/std': std.mean().detach().cpu(),
+                    'Policy/alpha': alpha_skill.detach().cpu(),                    
+                }
+            )
+
+            svd = self.compute_svd(params)
+            for log_name, log_val in svd.items():
+                wandb.log({log_name: wandb.Histogram(log_val['S'])})
+
+            
         self.update_log_alpha(entropy_term)
 
         return policy_loss, critic_loss
@@ -136,6 +163,24 @@ class BittleRL(hyper_params):
         self.optimizer_alpha_skill.zero_grad()
         loss.backward()
         self.optimizer_alpha_skill.step()
+
+
+    def compute_svd(self, params):
+        models = ['Critic', 'Policy']
+
+        svd = {}
+        
+        with torch.no_grad():
+            for name in models:
+                for key, param in params[name].items():
+                    if len(param.shape) < 2:
+                        continue
+                    U, S, Vh = torch.linalg.svd(param)
+                    svd_dict = {'U': U.cpu(), 'S': S.cpu(), 'Vh': Vh.cpu()}
+                    svd[f'{name}/{key}-svd'] = svd_dict
+
+        return svd
+        
         
 
         

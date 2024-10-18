@@ -11,7 +11,7 @@ import math
 from utils.helpers import get_params
 import time
 
-LOG_STD_MAX = 2
+LOG_STD_MAX = 0.5
 LOG_STD_MIN = -20
 
 
@@ -39,27 +39,41 @@ class Critic(nn.Module):
         self.preout_linear = nn.Linear(hidden_dim, 64)
         self.out_linear = nn.Linear(64, 1)
 
+        # Normalization layers
+        self.embed_joints_n = nn.LayerNorm(hidden_dim)
+        self.embed_dist_n = nn.LayerNorm(hidden_dim)
+
+        self.embed_actions_n = nn.LayerNorm(hidden_dim)
+
+        self.deep_layer1_n = nn.LayerNorm(hidden_dim)
+        self.deep_layer2_n = nn.LayerNorm(hidden_dim)
+        self.deep_layer3_n = nn.LayerNorm(hidden_dim)
+        self.deep_layer4_n = nn.LayerNorm(hidden_dim)
+
+        self.preout_linear_n = nn.LayerNorm(64)
+        
+        
+
     def forward(self, joints, dist, actions):
-        joints = F.relu(self.embed_joints(joints))
-        dist = F.relu(self.embed_dist(dist))
+        joints = self.embed_joints_n(F.relu(self.embed_joints(joints)))
+        dist = self.embed_dist_n(F.relu(self.embed_dist(dist)))
 
         actions = F.relu(self.embed_actions_conv1(actions))
         actions = F.relu(self.embed_actions_conv2(actions))
         actions = actions.reshape(actions.shape[0], -1)        
-        actions = F.relu(self.embed_actions(actions))
+        actions = self.embed_actions_n(F.relu(self.embed_actions(actions)))
         
         x = joints + dist + actions
 
-        x = F.relu(self.deep_layer1(x))
-        x = F.relu(self.deep_layer2(x))
-        x = F.relu(self.deep_layer3(x))
-        x = F.relu(self.deep_layer4(x))
+        x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
+        x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
+        x = self.deep_layer3_n(F.relu(self.deep_layer3(x)))
+        x = self.deep_layer4_n(F.relu(self.deep_layer4(x)))
 
-        x = F.relu(self.preout_linear(x))
+        x = self.preout_linear_n(F.relu(self.preout_linear(x)))
         x = self.out_linear(x)
 
         return x
-
 
 
 class Policy(nn.Module):
