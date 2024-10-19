@@ -52,18 +52,21 @@ def load_experiences(path, delete=True):
     if os.listdir(path):
         exps = []
         files = [os.path.join(path, file) for file in os.listdir(path)]
-        files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
+        if 'library' in path:
+            files.sort()
+        else:
+            files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
         
         for exp_file in files:
-            try:
-                data = np.load(exp_file)
-                dt_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-                if 'init' not in path:
-                    joints = data['arr_0']
-                    dist = data['arr_1']
-                    a = data['arr_2']
-                    np.savez(f'experiences_library/a_{dt_string}.npz', joints, dist, a)
-                exps.append(data)
+            try:                
+                with np.load(exp_file) as data:
+                    exps.append([data['arr_0'], data['arr_1'], data['arr_2']])
+                    dt_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+                    if path == 'experiences':
+                        joints = data['arr_0']
+                        dist = data['arr_1']
+                        a = data['arr_2']
+                        np.savez(f'experiences_library/a_{dt_string}.npz', joints, dist, a)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
             if delete:

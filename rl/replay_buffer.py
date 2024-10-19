@@ -26,21 +26,21 @@ class ReplayBuffer():
     def add(self, transitions):
         if transitions is not None:
             for transition in transitions:
-                joints = transition['arr_0']
-                dist = transition['arr_1'] # Recall distance is in dm (decimeters)
+                joints = transition[0]
+                dist = transition[1] # Recall distance is in dm (decimeters)
                 dist = np.clip(dist, 0, 25)
-                a = transition['arr_2']
+                a = transition[2]
                 # temporary line to reshape action
                 a = a.reshape(8, 8)
                 
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist
                 self.a_buf[self.eps, self.ptr] = a
-            
+                
                 self.ptr = (self.ptr + 1) % self.max_steps
                 if self.ptr == self.max_steps - 1:
                     self.eps += 1
-        
+
 
     def sample(self, batch_size=128):
         idxs = np.random.randint(0, self.max_steps - 1, size=batch_size)

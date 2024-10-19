@@ -87,8 +87,9 @@ class Policy(nn.Module):
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
         self.deep_layer2 = nn.Linear(hidden_dim, hidden_dim)
 
-        self.out_mu = nn.ConvTranspose1d(32, 8, 3) # 16 channels because 4 * 64 = 256
-        self.mu = nn.ConvTranspose1d(8, 8, 3, groups=8)
+        self.out_mu1 = nn.Conv1d(8, 32, 3) # 16 channels because 4 * 64 = 256
+        self.out_mu2 = nn.Conv1d(32, 8, 3)
+        self.mu = nn.Conv1d(8, 8, 5, groups=8)
         self.log_std = nn.Linear(hidden_dim, 64) # 8 frames and each action vector is 8        
 
         self.action_range = action_range
@@ -109,8 +110,9 @@ class Policy(nn.Module):
         x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
         x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
 
-        mu = x.reshape(-1, 32, 4)
-        mu = F.relu(self.out_mu(mu))
+        mu = x.reshape(-1, 8, 16)
+        mu = F.relu(self.out_mu1(mu))
+        mu = F.relu(self.out_mu2(mu))
         mu = self.mu(mu)
 
         log_std = self.log_std(x).reshape(-1, 8, 8)
