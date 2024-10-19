@@ -59,7 +59,10 @@ def load_experiences(path, delete=True):
                 data = np.load(exp_file)
                 dt_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
                 if 'init' not in path:
-                    np.save(f'experiences_library/a_{dt_string}.npz')
+                    joints = data['arr_0']
+                    dist = data['arr_1']
+                    a = data['arr_2']
+                    np.savez(f'experiences_library/a_{dt_string}.npz', joints, dist, a)
                 exps.append(data)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
@@ -81,8 +84,11 @@ def load_params(path):
     if os.listdir(path):
         files = os.listdir(path)
         if 'sent_to_disk' in files:
-            params = torch.load(f'{path}/params.pt', weights_only=True)
-            print('Params loaded')
+            try:
+                params = torch.load(f'{path}/params.pt', weights_only=True)
+                print('Params loaded')
+            except FileNotFoundError:
+                print('File appeared to have disappeared')
         else:
             params = None
         for file in os.listdir(path):

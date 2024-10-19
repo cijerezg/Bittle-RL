@@ -14,9 +14,11 @@ from torch.optim import Adam
 from utils.optimization import Adam_update
 import pdb
 import time
+from torch.distributions import Normal
+from torch.distributions.kl import kl_divergence
 
 INIT_LOG_ALPHA = 0
-MAX_ENTROPY = 40
+MAX_ENTROPY = 100
 
 class Actor():
     def __init__(self, device):
@@ -56,6 +58,7 @@ class BittleRL(hyper_params):
                                             requires_grad=True, device=self.device)
 
         self.optimizer_alpha_skill = Adam([self.log_alpha_skill], lr=args.learning_rate)
+        self.prior = Normal(0, 1)
         
 
     def training_iteration(self, params, optimizers, transition, iterations):
@@ -111,11 +114,12 @@ class BittleRL(hyper_params):
         q_pi_arg = (joints, dist, sample)
         q_pi = self.eval_critic(q_pi_arg, params)
 
-        entropy_term = torch.clamp(pdf.entropy(), max=MAX_ENTROPY).mean()
+        entropy_term = torch.clamp(kl_divergence(pdf, self.prior), max=MAX_ENTROPY).mean()
+
         alpha_skill = torch.exp(self.log_alpha_skill).detach()
         entropy_loss = alpha_skill * entropy_term
 
-        policy_loss = -q_pi.mean() #- entropy_loss.mean()
+        policy_loss = -q_pi.mean() + entropy_loss.mean()
 
         if log_data:
             current_eps = self.experience_buffer.eps
@@ -127,14 +131,13 @@ class BittleRL(hyper_params):
                 {
                     'Sampled_reward': rew.mean().detach().cpu(),
                     'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
-                    'Entropy_loss': entropy_term.detach().cpu(),
+                    'Entropy_term': entropy_term.detach().cpu(),
 
                     'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 30].detach().cpu()),
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
-                    'Policy/entropy_loss': entropy_loss.mean().detach().cpu(),
                     'Policy/mu_over_time': wandb.Histogram(sample[:,:,0].detach().cpu()),
                     'Policy/mu_over_joints': wandb.Histogram(sample[:,0,:].detach().cpu()),
                     'Policy/std': std.mean().detach().cpu(),
@@ -147,7 +150,7 @@ class BittleRL(hyper_params):
                 wandb.log({log_name: wandb.Histogram(log_val['S'])})
 
             
-        #self.update_log_alpha(entropy_term)
+        self.update_log_alpha(entropy_term)
 
         return policy_loss, critic_loss
 
@@ -159,7 +162,7 @@ class BittleRL(hyper_params):
 
     def update_log_alpha(self, entropy_term):
         loss = torch.exp(self.log_alpha_skill) * \
-            (entropy_term - self.delta_entropy).detach()
+            (self.delta_entropy - entropy_term).detach()
 
         self.optimizer_alpha_skill.zero_grad()
         loss.backward()
