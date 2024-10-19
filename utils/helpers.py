@@ -89,6 +89,7 @@ def load_params(path):
                 print('Params loaded')
             except FileNotFoundError:
                 print('File appeared to have disappeared')
+                params = None
         else:
             params = None
         for file in os.listdir(path):
