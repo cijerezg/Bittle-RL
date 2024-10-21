@@ -41,7 +41,7 @@ class Robot():
         new_sample = new_sample.to(sample)
         new_smooth_sample = new_smooth_sample.to(smooth_sample)
         self.idx += 1
-        self.idx = self.idx % 60
+        self.idx = self.idx % 405
         
         r_action = self.actor.robot_action(new_smooth_sample)
         return r_action, new_sample
