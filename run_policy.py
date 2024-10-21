@@ -3,6 +3,7 @@ import time
 from ardSerial import *
 import threading
 import torch
+from data.skill_library import *
 
 class Robot():
     def __init__(self, actor):
@@ -35,7 +36,6 @@ class Robot():
         state = (joints, dist)
         
         sample, density, mu, std, smooth_sample = self.actor.run_policy(params, state)
-        pdb.set_trace()
         new_sample = torch.tensor(free_skills[self.idx, :, :])
         new_smooth_sample = torch.tensor(new_skills[self.idx, :, :])
         new_sample = new_sample.to(sample)

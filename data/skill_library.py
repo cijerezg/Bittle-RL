@@ -71,8 +71,8 @@ skills = np.array(skills).reshape(7, 8, 8)
 
 means = np.array([40, 40, 40, 40, 20, 20, 20, 20])
 
-new_skills = skills - means[np.newaxis, np.newaxis, :]
-new_skills = new_skills / 12
+no_offset__skills = skills - means[np.newaxis, np.newaxis, :]
+new_skills = no_offset__skills / 12
 
 free_skills = np.zeros_like(new_skills)
 

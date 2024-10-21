@@ -14,7 +14,7 @@ import pdb
 host_ip = '10.1.207.51' # UWM IP
 
 
-MAX_STEPS = 500
+MAX_STEPS = 400
 FRAMES = 8
 ACTION_DIM = 8
 
@@ -35,17 +35,18 @@ def main():
     bittle = Robot(actor)
     prefix_action = [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
     action = np.zeros(8)
-    inc = np.array([8.3, 8.3, 8.3, 8.3, 10, 10, 10, 10])
+    inc = np.array([10, 10, 10, 10, 5, 5, 5, 5])
     
     for i in range(4):
         aux_act = action.tolist()
         bittle.execute_action(prefix_action.extend(aux_act))
-        time.sleep(.4)
+        time.sleep(.6)
         action += inc
 
     step = 0
     sample_action = np.zeros((1, 8))
 
+    time.sleep(1)
     
     while step < MAX_STEPS:
         dist = np.array(bittle.compute_distance(), dtype=np.float32)
