@@ -36,12 +36,12 @@ config = {
     'action_range': 4,
     'learning_rate': 3e-4,
     'discount': 0.97,
-    'gradient_steps': 4,
+    'gradient_steps': 8,
 
-    'reset_frequency': 20002,
-    'delta_entropy': 2,
+    'reset_frequency': 20003,
+    'delta_entropy': 1.2,
     'load_pretrained_models': False,
-    'max_iterations': 20000
+    'max_iterations': 20002
 }
 
     
@@ -63,8 +63,13 @@ def main(config=None):
 
         models = [actor.policy, critic, critic]
         names = ['Policy', 'Critic', 'Target_critic']
-        pretrained_models = [None, None, None]
 
+        if config.load_pretrained_models:
+            pretrained_models = torch.load('server_checkpoints/full_params.pt', weights_only=True)
+        else:
+            pretrained_models = [None, None, None]
+
+            
         params = get_params(models, names, pretrained_models)
 
         keys_optimizers = ['Critic', 'Policy']
@@ -93,6 +98,11 @@ def main(config=None):
 
             if iterations & 20 == 0:
                 save_params(policy_folder, params['Policy'])
+
+            if iterations % 2000 == 0:
+                torch.save(params, 'server_checkpoints/full_params.pt')
+
+            
             
 #if __name__ = "__main__":
 #    val = main()

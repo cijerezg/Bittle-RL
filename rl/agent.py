@@ -34,7 +34,7 @@ class Actor():
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()
         sample = 12 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        offset = np.array([25, 25, 25, 25, 30, 30, 30, 30])
+        offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
         sample = np.pad(sample, ((0, 16), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
@@ -133,9 +133,10 @@ class BittleRL(hyper_params):
                     'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
                     'Entropy_term': entropy_term.detach().cpu(),
 
-                    'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 30].detach().cpu()),
+                    'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 50].detach().cpu()),
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
+                    'Critic/Q_values_std': q[torch.abs(q) < 50].std().detach().cpu(),
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_over_time': wandb.Histogram(sample[:,:,0].detach().cpu()),

@@ -123,10 +123,10 @@ class Policy(nn.Module):
         sample = self.action_range * torch.tanh(sample / self.action_range)
 
         smooth_sample = sample.clone().detach()
-        smooth_sample[:, 0, :] = joints * 0.85 + smooth_sample[:, 0, :] * .15
+        smooth_sample[:, 0, :] = joints * 0.70 + smooth_sample[:, 0, :] * .30
 
         for i in range(1, smooth_sample.shape[1]):
-            smooth_sample[:, i, :] = smooth_sample[:, i-1, :] * .85 + smooth_sample[:, i, :] * .15
+            smooth_sample[:, i, :] = smooth_sample[:, i-1, :] * .70 + smooth_sample[:, i, :] * .30
 
         return sample, density, mu, std, smooth_sample
 

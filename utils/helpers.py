@@ -19,13 +19,14 @@ class hyper_params:
 def get_params(models, names, pretrained_params):
     params = OrderedDict()
 
-    for model, name_model, pretrained_params in zip(models, names, pretrained_params):
+    for model, name_model, pre_params in zip(models, names, pretrained_params):
         par = {}
 
         if name_model == 'Target_critic':
             params[name_model] = copy.deepcopy(params['Critic'])
+            continue
 
-        if pretrained_params is None:
+        if pre_params is None:
             for name, param in model.named_parameters():
                 if len(param.shape) <= 1:
                     if 'bias' in name:
@@ -37,8 +38,9 @@ def get_params(models, names, pretrained_params):
                 par[name] = nn.Parameter(init)
         else:
             for name, param in model.named_parameters():
+                init = pretrained_params[name_model][name]
                 par[name] = nn.Parameter(init)
-
+            print(f'{name_model} loaded successfully')
         params[name_model] = copy.deepcopy(par)
 
     return params

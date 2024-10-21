@@ -26,6 +26,8 @@ class Robot():
         return self.tof.get_distance() / 100 # Original distance is in mm, but since it is divided 100, it becomes dm (decimeters)
 
     def get_action(self, params, state):
+        # Add the actions here using the skills that are created
+        
         joints, dist = state
         joints = torch.tensor(joints).unsqueeze(0)
         dist = torch.tensor(dist).unsqueeze(0)
