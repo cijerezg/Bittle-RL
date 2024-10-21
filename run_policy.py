@@ -21,6 +21,7 @@ class Robot():
         self.tof.open()
         self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
         self.timing = self.tof.get_timing()
+        self.idx = 0
 
     def compute_distance(self):
         return self.tof.get_distance() / 100 # Original distance is in mm, but since it is divided 100, it becomes dm (decimeters)
@@ -34,8 +35,15 @@ class Robot():
         state = (joints, dist)
         
         sample, density, mu, std, smooth_sample = self.actor.run_policy(params, state)
-        r_action = self.actor.robot_action(smooth_sample)
-        return r_action, sample
+        pdb.set_trace()
+        new_sample = torch.tensor(free_skills[self.idx, :, :])
+        new_smooth_sample = torch.tensor(new_skills[self.idx, :, :])
+        new_sample = new_sample.to(sample)
+        new_smooth_sample = new_smooth_sample.to(smooth_sample)
+        self.idx += 1        
+        
+        r_action = self.actor.robot_action(new_smooth_sample)
+        return r_action, new_sample
 
     def execute_action(self, action):
         task = ['K', action, .2] # 0.16 This is the time it runs the action for 
