@@ -40,7 +40,8 @@ class Robot():
         new_smooth_sample = torch.tensor(new_skills[self.idx, :, :])
         new_sample = new_sample.to(sample)
         new_smooth_sample = new_smooth_sample.to(smooth_sample)
-        self.idx += 1        
+        self.idx += 1
+        self.idx = self.idx % 60
         
         r_action = self.actor.robot_action(new_smooth_sample)
         return r_action, new_sample
