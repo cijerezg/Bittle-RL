@@ -32,12 +32,13 @@ def main():
     model, name, pretrained_params = [actor.policy], ['Policy'], [None]
     params = get_params(model, name, pretrained_params)
 
+    distance_points = 5
     bittle = Robot(actor)
     prefix_action = [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
     action = np.zeros(8)
     inc = np.array([10, 10, 10, 10, 5, 5, 5, 5])
     
-    for i in range(4):
+    for i in range(5):
         aux_act = action.tolist()
         bittle.execute_action(prefix_action.extend(aux_act))
         time.sleep(.6)
@@ -49,7 +50,13 @@ def main():
     time.sleep(1)
     
     while step < MAX_STEPS:
-        dist = np.array(bittle.compute_distance(), dtype=np.float32)
+
+        dist = 0
+        for i in range(distance_points):
+            measured_dist = np.array(bittle.compute_distance(), dtype=np.float32)
+            dist += measured_dist
+
+        dist /= distance_points            
         joints = np.array(sample_action[-1, :], dtype=np.float32)
 
         action, sample_action = bittle.get_action(params, (joints, dist))
@@ -70,7 +77,7 @@ def main():
             
         save_experiences(path_exp, (joints, dist, sample_action), step) 
 
-        print(step)
+        print(f'Step is :{step}')
         
         bittle.execute_action(action)
         step += 1

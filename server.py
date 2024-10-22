@@ -12,6 +12,8 @@ import pickle
 import numpy as np
 import time
 import pdb
+import matplotlib.pyplot as plt
+
 
 # test
 
@@ -68,7 +70,6 @@ def main(config=None):
             pretrained_models = torch.load('server_checkpoints/full_params.pt', weights_only=True)
         else:
             pretrained_models = [None, None, None]
-
             
         params = get_params(models, names, pretrained_models)
 
@@ -76,14 +77,18 @@ def main(config=None):
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
 
         for i in range(1, 4):
-            init_transitions = load_experiences(f'{path_init_exp}{i}', delete=False)
+            init_transitions = load_experiences(f'init-experiences{i}', delete=False)
+            bittle_rl.experience_buffer.add(init_transitions)
+        
+        for i in range(1, 5):
+            init_transitions = load_experiences(f'suboptimal-experiences{i}', delete=False)
             bittle_rl.experience_buffer.add(init_transitions)
 
-        init_transitions = load_experiences('experiences_library', delete=False)
-        bittle_rl.experience_buffer.add(init_transitions)
-        
+        for i in range(1, 3):
+            init_transitions = load_experiences(f'optimal-experiences{i}', delete=False)
+            bittle_rl.experience_buffer.add(init_transitions)
+
         iterations = 0
-                                                
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations)

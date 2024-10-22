@@ -17,6 +17,8 @@ import time
 from torch.distributions import Normal
 from torch.distributions.kl import kl_divergence
 from data.skill_library import *
+import matplotlib.pyplot as plt
+
 
 INIT_LOG_ALPHA = 0
 MAX_ENTROPY = 100
@@ -31,14 +33,14 @@ class Actor():
         return sample, density, mu, std, smooth_sample
 
     def robot_action(self, sample):
-        r_action = [24, 0, 0, 1]
+        r_action = [48, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
         sample = 12 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
-        sample = np.pad(sample, ((0, 16), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
+        sample = np.pad(sample, ((0, 40), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
         sample = sample.flatten().astype(np.int32).tolist()
         r_action.extend(sample)
         
@@ -90,11 +92,9 @@ class BittleRL(hyper_params):
         a = torch.from_numpy(batch.a).to(self.device)
         rew = torch.from_numpy(batch.rew).to(self.device)
 
-
         with torch.no_grad():
             next_sample, _, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
-        
         target_critic_arg = (next_joints, next_dist, next_sample)
         critic_arg = (joints, dist, a)
 

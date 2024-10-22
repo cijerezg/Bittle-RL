@@ -14,7 +14,7 @@ import pdb
 
        
 class ReplayBuffer():
-    def __init__(self, episode_length=100, episodes=10000):
+    def __init__(self, episode_length=50, episodes=10000):
         self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
         self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
         self.a_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)
@@ -41,15 +41,22 @@ class ReplayBuffer():
                 if self.ptr == self.max_steps - 1:
                     self.eps += 1
 
-
     def sample(self, batch_size=128):
         idxs = np.random.randint(0, self.max_steps - 1, size=batch_size)
         idxs = idxs[:, np.newaxis]
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
-        reward = -np.abs(self.dist_buf[eps, idxs + 1, :] - 3) / 5 + .5
-        reward = np.clip(reward, -2.5, 2.5)
-
+        
+        dist = self.dist_buf[eps, idxs, :].squeeze(axis=1)
+        next_dist = self.dist_buf[eps, idxs+1, :].squeeze(axis=1)
+        delta = dist - next_dist
+        valid_idxs = np.abs(delta) < 2        
+        
+        idxs = idxs[valid_idxs]
+        eps = eps[valid_idxs]
+        delta = delta[valid_idxs]
+        reward = - np.abs(delta - 0.14) * 3 + .5        
+        
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),
                          next_joints=self.joints_buf[eps, idxs+1, :].squeeze(),
