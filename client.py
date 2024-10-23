@@ -48,6 +48,10 @@ def main():
     sample_action = np.zeros((1, 8))
 
     time.sleep(1)
+
+    updated_policy = load_params(path_params)
+    if updated_policy:
+        params['Policy'] = updated_policy
     
     while step < MAX_STEPS:
 

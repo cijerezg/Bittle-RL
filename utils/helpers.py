@@ -68,7 +68,7 @@ def load_experiences(path, delete=True):
                         joints = data['arr_0']
                         dist = data['arr_1']
                         a = data['arr_2']
-                        np.savez(f'experiences_library/a_{dt_string}.npz', joints, dist, a)
+                        np.savez(f'experiences-library/a_{dt_string}.npz', joints, dist, a)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
             if delete:

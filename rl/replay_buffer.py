@@ -50,12 +50,14 @@ class ReplayBuffer():
         dist = self.dist_buf[eps, idxs, :].squeeze(axis=1)
         next_dist = self.dist_buf[eps, idxs+1, :].squeeze(axis=1)
         delta = dist - next_dist
-        valid_idxs = np.abs(delta) < 2        
+        valid_idxs = np.abs(delta) < 2
         
         idxs = idxs[valid_idxs]
+        idxs = idxs[:, np.newaxis]
         eps = eps[valid_idxs]
+        eps = eps[:, np.newaxis]
         delta = delta[valid_idxs]
-        reward = - np.abs(delta - 0.14) * 3 + .5        
+        reward = - np.abs(delta - 0.14) * 3 + .1
         
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),

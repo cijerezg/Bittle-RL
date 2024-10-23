@@ -41,8 +41,8 @@ config = {
     'gradient_steps': 8,
 
     'reset_frequency': 20003,
-    'delta_entropy': 1.2,
-    'load_pretrained_models': False,
+    'delta_entropy': 2,
+    'load_pretrained_models': True,
     'max_iterations': 20002
 }
 
