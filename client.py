@@ -7,7 +7,6 @@ from utils.helpers import get_params, save_experiences, load_params, create_dir
 import torch
 import time
 import os
-from data.skill_library import *
 import pdb
 
 #host_ip = '10.56.136.219' # Liz
@@ -29,8 +28,11 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
     actor = Actor(device)
 
-    model, name = [actor.policy, actor.encoder], ['Policy', 'Encoder']
-    pretrained_params = [None, torch.load('offline_models/decoder.pt', weights_only=True)]
+    model, name = [actor.policy, actor.decoder], ['Policy', 'Decoder']
+    decoder_params = torch.load('offline_models/decoder.pt',
+                                weights_only=True, map_location=device)
+    
+    pretrained_params = [None, decoder_params]
     params = get_params(model, name, pretrained_params)
 
     distance_points = 5
@@ -46,8 +48,6 @@ def main():
         action += inc
 
     step = 0
-    sample_action = np.zeros((1, 8))
-
     time.sleep(1)
 
     updated_policy = load_params(path_params)
@@ -59,16 +59,17 @@ def main():
     while step < MAX_STEPS:
         dist = 0
         for i in range(distance_points):
-            measured_dist = np.array(bittle.compute_distance(), dtype=np.float32)
+            measured_dist = bittle.compute_distance()
             dist += measured_dist
 
         dist /= distance_points                
         if step > 0:
             speed = dist - old_dist
-            
-        joints = np.array(sample_action[-1, :], dtype=np.float32)
+            joints = np.zeros((1, 8), dtype=np.float32)
 
-        action, sample_action = bittle.get_action(params, (joints, speed))
+        speed = np.array(speed, dtype=np.float32)
+        
+        action, sample_action, joints = bittle.get_action(params, (joints, speed))
         sample_action = sample_action.detach().numpy().squeeze()
             
         save_experiences(path_exp, (joints, speed, sample_action), step) 

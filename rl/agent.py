@@ -16,7 +16,6 @@ import pdb
 import time
 from torch.distributions import Normal
 from torch.distributions.kl import kl_divergence
-from data.skill_library import *
 import matplotlib.pyplot as plt
 
 
@@ -35,7 +34,8 @@ class Actor():
         return sample, density, mu, std
 
     def robot_action(self, sample, params, joints):
-        sample = functional_call(self.decoder, params['Decoder'], (sample, joints))                     
+        sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
+        out_joints = sample[:, -1, :]
         r_action = [48, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
@@ -47,7 +47,7 @@ class Actor():
         sample = sample.flatten().astype(np.int32).tolist()
         r_action.extend(sample)
         
-        return r_action
+        return r_action, out_joints
 
 class BittleRL(hyper_params):
     def __init__(self, experience_buffer, actor, critic, args):             

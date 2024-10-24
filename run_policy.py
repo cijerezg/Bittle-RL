@@ -3,7 +3,6 @@ import time
 from ardSerial import *
 import threading
 import torch
-from data.skill_library import *
 
 class Robot():
     def __init__(self, actor):
@@ -36,17 +35,9 @@ class Robot():
         state = (joints, dist)
         
         sample, density, mu, std = self.actor.run_policy(params, state)
-        # new_sample = torch.tensor(free_skills[self.idx, :, :])
-        # new_smooth_sample = torch.tensor(new_skills[self.idx, :, :])
-        # new_sample = new_sample.to(sample)
-        # new_smooth_sample = new_smooth_sample.to(smooth_sample)
-        # self.idx += 1
-        # self.idx = self.idx % 405
+        r_action, out_joints = self.actor.robot_action(sample, params, joints)
         
-        # r_action = self.actor.robot_action(new_smooth_sample)
-        r_action = self.actor.robot_action(sample)
-        
-        return r_action, sample
+        return r_action, sample, out_joints
 
     def execute_action(self, action):
         task = ['K', action, .2] # 0.16 This is the time it runs the action for 
