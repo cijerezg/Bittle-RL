@@ -143,8 +143,7 @@ class BittleRL(hyper_params):
                     'Critic/Q_values_std': q[torch.abs(q) < 50].std().detach().cpu(),
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
-                    'Policy/mu_over_time': wandb.Histogram(sample[:,:,0].detach().cpu()),
-                    'Policy/mu_over_joints': wandb.Histogram(sample[:,0,:].detach().cpu()),
+                    'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
                     'Policy/std': std.mean().detach().cpu(),
                     'Policy/alpha': alpha_skill.detach().cpu(),                    
                 }

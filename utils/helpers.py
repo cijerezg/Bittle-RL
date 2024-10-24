@@ -38,7 +38,10 @@ def get_params(models, names, pretrained_params):
                 par[name] = nn.Parameter(init)
         else:
             for name, param in model.named_parameters():
-                init = pre_params[name]
+                if name_model == 'Decoder':
+                    init = pre_params[name]
+                else:
+                    init = pretrained_params[name_model][name]
                 par[name] = nn.Parameter(init)
             print(f'{name_model} loaded successfully')
         params[name_model] = copy.deepcopy(par)

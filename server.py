@@ -42,7 +42,7 @@ config = {
 
     'reset_frequency': 20003,
     'delta_entropy': 2,
-    'load_pretrained_models': True,
+    'load_pretrained_models': False,
     'max_iterations': 20002
 }
 
@@ -76,17 +76,19 @@ def main(config=None):
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
 
-        for i in range(1, 4):
-            init_transitions = load_experiences(f'init-experiences{i}', delete=False)
-            bittle_rl.experience_buffer.add(init_transitions)
+        init_transitions = load_experiences(f'init-experiences', delete=False)
+        bittle_rl.experience_buffer.add(init_transitions)
+        # for i in range(1, 4):
+        #     init_transitions = load_experiences(f'init-experiences{i}', delete=False)
+        #     bittle_rl.experience_buffer.add(init_transitions)
         
-        for i in range(1, 5):
-            init_transitions = load_experiences(f'suboptimal-experiences{i}', delete=False)
-            bittle_rl.experience_buffer.add(init_transitions)
+        # for i in range(1, 5):
+        #     init_transitions = load_experiences(f'suboptimal-experiences{i}', delete=False)
+        #     bittle_rl.experience_buffer.add(init_transitions)
 
-        for i in range(1, 3):
-            init_transitions = load_experiences(f'optimal-experiences{i}', delete=False)
-            bittle_rl.experience_buffer.add(init_transitions)
+        # for i in range(1, 3):
+        #     init_transitions = load_experiences(f'optimal-experiences{i}', delete=False)
+        #     bittle_rl.experience_buffer.add(init_transitions)
 
         iterations = 0
         while iterations < config.max_iterations:

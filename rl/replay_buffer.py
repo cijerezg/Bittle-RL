@@ -14,10 +14,10 @@ import pdb
 
        
 class ReplayBuffer():
-    def __init__(self, episode_length=50, episodes=10000):
+    def __init__(self, episode_length=100, episodes=10000):
         self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
         self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
-        self.a_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)
+        self.a_buf = np.zeros((episodes, episode_length, 4), dtype=np.float32)
         #self.rew_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)
 
         self.ptr, self.max_steps = 0, episode_length
@@ -28,10 +28,11 @@ class ReplayBuffer():
             for transition in transitions:
                 joints = transition[0]
                 dist = transition[1] # Recall distance is in dm (decimeters)
-                dist = np.clip(dist, 0, 25)
+                dist = np.clip(dist, -4, 4)
                 a = transition[2]
                 # temporary line to reshape action
-                a = a.reshape(8, 8)
+                if np.abs(dist) > 2.5:
+                    continue
                 
                 self.joints_buf[self.eps, self.ptr] = joints
                 self.dist_buf[self.eps, self.ptr] = dist
@@ -47,17 +48,7 @@ class ReplayBuffer():
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
         
-        dist = self.dist_buf[eps, idxs, :].squeeze(axis=1)
-        next_dist = self.dist_buf[eps, idxs+1, :].squeeze(axis=1)
-        delta = dist - next_dist
-        valid_idxs = np.abs(delta) < 2
-        
-        idxs = idxs[valid_idxs]
-        idxs = idxs[:, np.newaxis]
-        eps = eps[valid_idxs]
-        eps = eps[:, np.newaxis]
-        delta = delta[valid_idxs]
-        reward = - np.abs(delta - 0.14) * 3 + .1
+        reward = - np.abs(self.dist_buf[eps, idxs+1, :] - 0.14) * 3 + .1
         
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),

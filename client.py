@@ -9,9 +9,6 @@ import time
 import os
 import pdb
 
-#host_ip = '10.56.136.219' # Liz
-host_ip = '10.1.207.51' # UWM IP
-
 
 MAX_STEPS = 400
 FRAMES = 8
@@ -37,15 +34,6 @@ def main():
 
     distance_points = 5
     bittle = Robot(actor)
-    prefix_action = [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-    action = np.zeros(8)
-    inc = np.array([10, 10, 10, 10, 5, 5, 5, 5])
-    
-    for i in range(5):
-        aux_act = action.tolist()
-        bittle.execute_action(prefix_action.extend(aux_act))
-        time.sleep(.6)
-        action += inc
 
     step = 0
     time.sleep(1)
@@ -68,10 +56,12 @@ def main():
             joints = np.zeros((1, 8), dtype=np.float32)
 
         speed = np.array(speed, dtype=np.float32)
+
         
         action, sample_action, joints = bittle.get_action(params, (joints, speed))
         sample_action = sample_action.detach().numpy().squeeze()
-            
+        joints = joints.detach().numpy()
+        
         save_experiences(path_exp, (joints, speed, sample_action), step) 
 
         print(f'Step is :{step}; speed is {speed}')
