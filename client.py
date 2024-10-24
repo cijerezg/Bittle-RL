@@ -29,7 +29,8 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
     actor = Actor(device)
 
-    model, name, pretrained_params = [actor.policy], ['Policy'], [None]
+    model, name = [actor.policy, actor.encoder], ['Policy', 'Encoder']
+    pretrained_params = [None, torch.load('offline_models/decoder.pt', weights_only=True)]
     params = get_params(model, name, pretrained_params)
 
     distance_points = 5
@@ -52,40 +53,33 @@ def main():
     updated_policy = load_params(path_params)
     if updated_policy:
         params['Policy'] = updated_policy
-    
-    while step < MAX_STEPS:
 
+    speed = 0
+        
+    while step < MAX_STEPS:
         dist = 0
         for i in range(distance_points):
             measured_dist = np.array(bittle.compute_distance(), dtype=np.float32)
             dist += measured_dist
 
-        dist /= distance_points            
+        dist /= distance_points                
+        if step > 0:
+            speed = dist - old_dist
+            
         joints = np.array(sample_action[-1, :], dtype=np.float32)
 
-        action, sample_action = bittle.get_action(params, (joints, dist))
-        
-                                                
-        # if step < MAX_STEPS:
-        #     idx += 1
-        #     idx = idx % len(skills)
-            
-        #     action_s = skills[idx]
-        #     action = [8, 0, 0, 1]
-        #     action.extend(action_s)
-        #     sample_action = np.array(action_s, dtype=np.float32)
-        #     sample_action = sample_action / 25
-        # else:
-        #     action, sample_action = bittle.get_action(params, (joints, dist))
+        action, sample_action = bittle.get_action(params, (joints, speed))
         sample_action = sample_action.detach().numpy().squeeze()
             
-        save_experiences(path_exp, (joints, dist, sample_action), step) 
+        save_experiences(path_exp, (joints, speed, sample_action), step) 
 
-        print(f'Step is :{step}')
+        print(f'Step is :{step}; speed is {speed}')
         
         bittle.execute_action(action)
         step += 1
 
+        old_dist = dist
+               
         if step % 20 == 0:
             updated_policy = load_params(path_params)
         

@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '../')
 
 import torch
-from models.architectures import Critic, Policy
+from models.architectures import Critic, Policy, Decoder
 import copy
 from torch.func import functional_call
 import torch.nn.functional as F
@@ -20,6 +20,7 @@ from data.skill_library import *
 import matplotlib.pyplot as plt
 
 
+
 INIT_LOG_ALPHA = 0
 MAX_ENTROPY = 100
 
@@ -27,16 +28,18 @@ class Actor():
     def __init__(self, device):
         self.policy = Policy(device).to(device)
         self.max_angle = 125
+        self.decoder = Decoder().to(device)
 
     def run_policy(self, params, x):
-        sample, density, mu, std, smooth_sample = functional_call(self.policy, params['Policy'], x)
-        return sample, density, mu, std, smooth_sample
+        sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
+        return sample, density, mu, std
 
-    def robot_action(self, sample):
+    def robot_action(self, sample, params, joints):
+        sample = functional_call(self.decoder, params['Decoder'], (sample, joints))                     
         r_action = [48, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
-        sample = 12 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
+        sample = 15 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
@@ -93,7 +96,7 @@ class BittleRL(hyper_params):
         rew = torch.from_numpy(batch.rew).to(self.device)
 
         with torch.no_grad():
-            next_sample, _, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
+            next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
         target_critic_arg = (next_joints, next_dist, next_sample)
         critic_arg = (joints, dist, a)
@@ -110,7 +113,7 @@ class BittleRL(hyper_params):
         critic_loss = F.mse_loss(q.squeeze(), q_target.squeeze())
 
         # Policy loss
-        sample, pdf, mu, std, _ = self.actor.run_policy(params, (joints, dist))
+        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist))
 
         q_pi_arg = (joints, dist, sample)
         q_pi = self.eval_critic(q_pi_arg, params)

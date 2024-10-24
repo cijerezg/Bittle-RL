@@ -19,7 +19,11 @@ def Adam_update(params, losses, keys, optimizers):
 def set_optimizers(params, keys, lr):
     optimizers = {}
     for key in keys:
-        optimizers[key] = Adam(params[key].values(), lr)
+        if key == 'VAE':
+            aux_params = (*params['Encoder'].values(), *params['Decoder'].values())
+            optimizers[key] = Adam(aux_params, lr)
+        else:
+            optimizers[key] = Adam(params[key].values(), lr)
 
     return optimizers
 

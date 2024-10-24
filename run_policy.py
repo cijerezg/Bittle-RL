@@ -35,7 +35,7 @@ class Robot():
         dist = torch.tensor(dist).unsqueeze(0)
         state = (joints, dist)
         
-        sample, density, mu, std, smooth_sample = self.actor.run_policy(params, state)
+        sample, density, mu, std = self.actor.run_policy(params, state)
         # new_sample = torch.tensor(free_skills[self.idx, :, :])
         # new_smooth_sample = torch.tensor(new_skills[self.idx, :, :])
         # new_sample = new_sample.to(sample)
@@ -44,7 +44,7 @@ class Robot():
         # self.idx = self.idx % 405
         
         # r_action = self.actor.robot_action(new_smooth_sample)
-        r_action = self.actor.robot_action(smooth_sample)
+        r_action = self.actor.robot_action(sample)
         
         return r_action, sample
 
