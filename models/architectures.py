@@ -11,10 +11,63 @@ import math
 from utils.helpers import get_params
 import time
 
-LOG_STD_MAX = 1
+LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
 
+class Encoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.embed_actions = nn.Conv1(8, 32, 3)
+
+        self.layer1 = nn.Conv1d(32, 16, 3)
+        self.layer2 = nn.Conv1d(16, 8, 3)
+
+        self.mu_hidden = nn.Linear(16, 16)
+        self.log_std_hidden = nn.Linear(16, 16)
+        
+        self.mu = nn.Linear(16, 4)
+        self.log_std = nn.Linear(16, 4)
+
+    def forward(self, x):
+        x = F.relu(self.embed_actions(x))
+        x = F.relu(self.layer1(x))
+
+        x = x.reshape[-1, 16]
+
+        mu = F.relu(self.mu_hidden(x))
+        mu = self.mu(mu)
+
+        log_std = F.relu(self.log_std_hidden(x))
+        log_std = self.log_std_hidden(log_std)
+        std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
+
+        density = Normal(mu, std)
+        sample = density.rsample()
+
+        return sample, density, mu, std
+
+
+class Decoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.layer1 = nn.Linear(4, 32)
+
+        self.deconv1 = nn.ConvTranspose1d(16, 32, 3)
+        self.deconv2 = nn.ConvTranspose1d(32, 32, 3)
+        self.deconv3 = nn.ConvTranspose1d(32, 8, 3, groups=8)
+
+    def forward(self, x):
+        x = F.relu(self.layer1(x))
+        x = x.reshape(-1, 16, 2)
+
+        x = F.relu(self.deconv1(x))
+        x = F.relu(self.deconv2(x))
+        x = self.deconv3(x)
+
+        return x
 
 
 class Critic(nn.Module):
