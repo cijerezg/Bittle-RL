@@ -43,6 +43,7 @@ def main():
         params['Policy'] = updated_policy
 
     speed = 0
+    joints = np.zeros((1, 8), dtype=np.float32)
         
     while step < MAX_STEPS:
         dist = 0
@@ -53,7 +54,6 @@ def main():
         dist /= distance_points                
         if step > 0:
             speed = dist - old_dist
-            joints = np.zeros((1, 8), dtype=np.float32)
 
         speed = np.array(speed, dtype=np.float32)
 
@@ -64,7 +64,7 @@ def main():
         
         save_experiences(path_exp, (joints, speed, sample_action), step) 
 
-        print(f'Step is :{step}; speed is {speed}')
+        print(f'Step is :{step}; speed is {speed}; distance is {dist}')
         
         bittle.execute_action(action)
         step += 1

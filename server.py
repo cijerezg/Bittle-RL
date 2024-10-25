@@ -41,7 +41,7 @@ config = {
     'gradient_steps': 8,
 
     'reset_frequency': 20003,
-    'delta_entropy': 2,
+    'delta_entropy': 4,
     'load_pretrained_models': False,
     'max_iterations': 20002
 }
@@ -54,6 +54,7 @@ def main(config=None):
 
         create_dir(policy_folder)
         create_dir(path_exp)
+        create_dir('experiences-library')
         
         config = wandb.config
         
@@ -76,8 +77,13 @@ def main(config=None):
         keys_optimizers = ['Critic', 'Policy']
         optimizers = set_optimizers(params, keys_optimizers, config.learning_rate)
 
-        init_transitions = load_experiences(f'init-experiences', delete=False)
+        init_transitions = load_experiences('init-experiences', delete=False)
         bittle_rl.experience_buffer.add(init_transitions)
+
+        init_transitions = load_experiences('experiences-library', delete=False)
+        bittle_rl.experience_buffer.add(init_transitions)
+
+        
         # for i in range(1, 4):
         #     init_transitions = load_experiences(f'init-experiences{i}', delete=False)
         #     bittle_rl.experience_buffer.add(init_transitions)
