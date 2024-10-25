@@ -53,7 +53,7 @@ def main():
 
         dist /= distance_points                
         if step > 0:
-            speed = dist - old_dist
+            speed = old_dist - dist
 
         speed = np.array(speed, dtype=np.float32)
 

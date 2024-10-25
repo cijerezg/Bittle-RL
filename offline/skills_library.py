@@ -127,8 +127,9 @@ for skill in skills:
     upsampled_data1 = upsample(skill, skill.shape[0] * 2)
     upsampled_data2 = upsample(skill, int(skill.shape[0] * 1.8))
     upsampled_data3 = upsample(skill, int(skill.shape[0] * 1.2))
+    upsampled_data3 = upsample(skill, int(skill.shape[0] * 1.5))    
     downsampled_data2 = downsample(skill, int(skill.shape[0] // 1.2))
-    downsampled_data3 = downsample(skill, int(skill.shape[0] // 1.5))
+
 
     new_skills.append(skill.flatten().tolist())
     new_skills.append(upsampled_data1.flatten().tolist())
