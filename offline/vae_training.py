@@ -141,7 +141,7 @@ params = get_params(models, names, pretrained_models)
 keys_optimizers = ['VAE']
 optimizers = set_optimizers(params, keys_optimizers, 3e-4)
 
-for i in range(1000):
+for i in range(1200):
     params = training.train(params, optimizers, 0.05, i)
 
 

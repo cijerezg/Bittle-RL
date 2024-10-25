@@ -125,7 +125,8 @@ new_skills = []
 for skill in skills:
     skill = np.array(skill).reshape(-1, 8)
     upsampled_data1 = upsample(skill, skill.shape[0] * 2)
-    upsampled_data2 = upsample(skill, int(skill.shape[0] * 1.2))
+    upsampled_data2 = upsample(skill, int(skill.shape[0] * 1.8))
+    upsampled_data3 = upsample(skill, int(skill.shape[0] * 1.2))
     downsampled_data1 = downsample(skill, skill.shape[0] // 2)
     downsampled_data2 = downsample(skill, int(skill.shape[0] // 1.5))
     downsampled_data3 = downsample(skill, int(skill.shape[0] // 1.8))
@@ -133,6 +134,7 @@ for skill in skills:
     new_skills.append(skill.flatten().tolist())
     new_skills.append(upsampled_data1.flatten().tolist())
     new_skills.append(upsampled_data2.flatten().tolist())
+    new_skills.append(upsampled_data3.flatten().tolist())    
     new_skills.append(downsampled_data1.flatten().tolist())
     new_skills.append(downsampled_data2.flatten().tolist())
     new_skills.append(downsampled_data3.flatten().tolist())
