@@ -21,7 +21,7 @@ import pandas as pd
 import plotly.express as px
 
 
-INIT_LOG_ALPHA = 0
+INIT_LOG_ALPHA = -3
 MAX_ENTROPY = 100
 
 class Actor():
@@ -128,8 +128,9 @@ class BittleRL(hyper_params):
 
         if log_data:
             current_eps = self.experience_buffer.eps
-            last_return = -np.abs(self.experience_buffer.dist_buf[current_eps - 1, :] - 3) / 5 + .5
-            wandb.log({'Last_return': last_return.mean()}, step=iterations)
+            
+            last_return = self.experience_buffer.dist_buf[current_eps - 1, :].mean()
+            wandb.log({'Average speed': last_return.mean()}, step=iterations)
 
             policy_output = self.log_scatter_3d(sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3],
                                                 'Dim 1', 'Dim 2', 'Dim 3', 'Dim 4')
@@ -141,10 +142,10 @@ class BittleRL(hyper_params):
                     'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
                     'Entropy_term': entropy_term.detach().cpu(),
 
-                    'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 50].detach().cpu()),
+                    'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 100].detach().cpu()),
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
-                    'Critic/Q_values_std': q[torch.abs(q) < 50].std().detach().cpu(),
+                    'Critic/Q_values_std': q[torch.abs(q) < 100].std().detach().cpu(),
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),

@@ -98,6 +98,12 @@ def load_params(path):
             except FileNotFoundError:
                 print('File appeared to have disappeared')
                 params = None
+            except EOFError:
+                print('Strange error. Params not loaded')
+                params = None
+            except OSError:
+                print('OS Error. Params not loaded')
+                params = None
         else:
             params = None
         for file in os.listdir(path):

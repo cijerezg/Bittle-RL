@@ -13,6 +13,8 @@ import numpy as np
 import time
 import pdb
 import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
 
 
 # test
@@ -42,7 +44,7 @@ config = {
 
     'reset_frequency': 20003,
     'delta_entropy': 4,
-    'load_pretrained_models': False,
+    'load_pretrained_models': True,
     'max_iterations': 20002
 }
 
@@ -97,6 +99,7 @@ def main(config=None):
         #     bittle_rl.experience_buffer.add(init_transitions)
 
         iterations = 0
+        print('Starting')
         while iterations < config.max_iterations:
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations)

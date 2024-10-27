@@ -64,7 +64,7 @@ def main():
         
         save_experiences(path_exp, (joints, speed, sample_action), step) 
 
-        print(f'Step is :{step}; speed is {speed}; distance is {dist}')
+        print(f'Step is :{step}; speed is {speed=:.3f}; distance is {dist=:.3f}; action is {np.round(sample_action, 2)}')
         
         bittle.execute_action(action)
         step += 1
