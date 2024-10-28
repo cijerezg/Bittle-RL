@@ -83,7 +83,6 @@ def main(config=None):
 
         init_transitions = load_experiences('experiences-library', delete=False)
         bittle_rl.experience_buffer.add(init_transitions)
-        pdb.set_trace()
         
         iterations = 0
         print('Starting')

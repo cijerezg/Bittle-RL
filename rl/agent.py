@@ -96,7 +96,6 @@ class BittleRL(hyper_params):
         a = torch.from_numpy(batch.a).to(self.device)
         rew = torch.from_numpy(batch.rew).to(self.device)
 
-
         with torch.no_grad():
             next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
 
