@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
-
 # test
 
 torch.set_printoptions(sci_mode=False)
@@ -43,8 +42,8 @@ config = {
     'gradient_steps': 8,
 
     'reset_frequency': 20003,
-    'delta_entropy': 4,
-    'load_pretrained_models': True,
+    'delta_entropy': 8,
+    'load_pretrained_models': False,
     'max_iterations': 20002
 }
 
@@ -86,18 +85,6 @@ def main(config=None):
         bittle_rl.experience_buffer.add(init_transitions)
 
         
-        # for i in range(1, 4):
-        #     init_transitions = load_experiences(f'init-experiences{i}', delete=False)
-        #     bittle_rl.experience_buffer.add(init_transitions)
-        
-        # for i in range(1, 5):
-        #     init_transitions = load_experiences(f'suboptimal-experiences{i}', delete=False)
-        #     bittle_rl.experience_buffer.add(init_transitions)
-
-        # for i in range(1, 3):
-        #     init_transitions = load_experiences(f'optimal-experiences{i}', delete=False)
-        #     bittle_rl.experience_buffer.add(init_transitions)
-
         iterations = 0
         print('Starting')
         while iterations < config.max_iterations:

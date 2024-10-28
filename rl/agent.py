@@ -21,7 +21,7 @@ import pandas as pd
 import plotly.express as px
 
 
-INIT_LOG_ALPHA = -3
+INIT_LOG_ALPHA = 0
 MAX_ENTROPY = 100
 
 class Actor():
@@ -95,6 +95,7 @@ class BittleRL(hyper_params):
         next_joints = torch.from_numpy(batch.next_joints).to(self.device)
         a = torch.from_numpy(batch.a).to(self.device)
         rew = torch.from_numpy(batch.rew).to(self.device)
+
 
         with torch.no_grad():
             next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))

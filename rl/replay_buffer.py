@@ -48,10 +48,15 @@ class ReplayBuffer():
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
 
-        upper_bound = .2        
+        upper_bound = .2
 
+        diff_joints = self.joints_buf[eps, idxs, :].squeeze() + self.joints_buf[eps, idxs+1, :].squeeze()
+        diff_joints = np.linalg.norm(diff_joints, axis=-1)        
+        diff_joints_norm = np.where(np.abs(diff_joints) < 5.5, 0, -2)
+        
         reward = - np.square(5 * (self.dist_buf[eps, idxs+1, :] - 0.15)) + upper_bound
-        reward = np.clip(reward, -3.8, upper_bound)
+        reward = np.clip(reward, -3.8, upper_bound).squeeze() + diff_joints_norm
+        reward = np.array(reward, dtype=np.float32)
         
         batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
                          dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),
@@ -61,7 +66,6 @@ class ReplayBuffer():
                          rew=reward.squeeze())
 
         return batch
-
 
     def load_saved_data(self):
         pass
