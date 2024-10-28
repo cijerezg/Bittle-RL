@@ -39,7 +39,7 @@ config = {
     'action_range': 4,
     'learning_rate': 3e-4,
     'discount': 0.97,
-    'gradient_steps': 8,
+    'gradient_steps': 16,
 
     'reset_frequency': 20003,
     'delta_entropy': 8,
@@ -83,7 +83,7 @@ def main(config=None):
 
         init_transitions = load_experiences('experiences-library', delete=False)
         bittle_rl.experience_buffer.add(init_transitions)
-
+        pdb.set_trace()
         
         iterations = 0
         print('Starting')
