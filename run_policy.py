@@ -29,10 +29,11 @@ class Robot():
     def get_action(self, params, state):
         # Add the actions here using the skills that are created
         
-        joints, dist = state
+        joints, dist, prev_action = state
         joints = torch.tensor(joints).unsqueeze(0)
         dist = torch.tensor(dist).unsqueeze(0)
-        state = (joints, dist)
+        prev_action = torch.tensor(prev_action).unsqueeze(0)
+        state = (joints, dist, prev_action)
         
         sample, density, mu, std = self.actor.run_policy(params, state)
         r_action, out_joints = self.actor.robot_action(sample, params, joints)

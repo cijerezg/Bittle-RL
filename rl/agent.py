@@ -19,6 +19,7 @@ from torch.distributions.kl import kl_divergence
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 
 INIT_LOG_ALPHA = 0
@@ -34,7 +35,7 @@ class Actor():
         sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
         return sample, density, mu, std
 
-    def robot_action(self, sample, params, joints):
+    def robot_action(self, sample, params, joints, prev_action):
         sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
         out_joints = sample[:, -1, :]
         r_action = [48, 0, 0, 1]
@@ -94,13 +95,14 @@ class BittleRL(hyper_params):
         next_dist = torch.from_numpy(batch.next_dist).to(self.device)
         next_joints = torch.from_numpy(batch.next_joints).to(self.device)
         a = torch.from_numpy(batch.a).to(self.device)
+        prev_a = torch.from_numpy(batch.prev_a).to(self.device)
         rew = torch.from_numpy(batch.rew).to(self.device)
 
         with torch.no_grad():
-            next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist))
+            next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist, a))
 
-        target_critic_arg = (next_joints, next_dist, next_sample)
-        critic_arg = (joints, dist, a)
+        target_critic_arg = (next_joints, next_dist, next_sample, a)
+        critic_arg = (joints, dist, a, prev_a)
 
         with torch.no_grad():
             q_target = self.eval_critic(target_critic_arg, params,
@@ -114,9 +116,9 @@ class BittleRL(hyper_params):
         critic_loss = F.mse_loss(q.squeeze(), q_target.squeeze())
 
         # Policy loss
-        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist))
+        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist, prev_a))
 
-        q_pi_arg = (joints, dist, sample)
+        q_pi_arg = (joints, dist, sample, prev_a)
         q_pi = self.eval_critic(q_pi_arg, params)
 
         entropy_term = torch.clamp(kl_divergence(pdf, self.prior), max=MAX_ENTROPY).mean()
@@ -127,9 +129,21 @@ class BittleRL(hyper_params):
         policy_loss = -q_pi.mean() + entropy_loss.mean()
 
         if log_data:
-            current_eps = self.experience_buffer.eps
+            last_eps = self.experience_buffer.eps - 1
             
-            last_return = self.experience_buffer.dist_buf[current_eps - 1, :].mean()
+            last_return = self.experience_buffer.dist_buf[last_eps, :].mean()
+
+            joints = self.experience_buffer.joints_buf[last_eps, :, :].squeeze()
+
+            actions = self.experience_buffer.a_buf[last_eps, :, :].squeeze()
+            
+            seed = np.random.RandomState(1234567)            
+            proj_matrix_j = seed.randn(8, 3)
+            proj_matrix_a = seed.randn(4, 3)
+
+            traj_joints = np.matmul(joints, proj_matrix_j)
+            traj_actions = np.matmul(actions, proj_matrix_a)
+                                    
             wandb.log({'Average speed': last_return.mean()}, step=iterations)
 
             policy_output = self.log_scatter_3d(sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3],
@@ -140,18 +154,27 @@ class BittleRL(hyper_params):
 
             q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), rew.squeeze(), next_dist.squeeze(),
                                               'Q off-policy', 'Q pi', 'Reward', 'Speed')
+
+            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(100),
+                                              'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
+
+            actions_traj = self.log_scatter_3d(traj_actions[:, 0], traj_actions[:, 1], traj_actions[:, 2], np.arange(100),
+                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
+
             
             wandb.log(
                 {
                     'Sampled_reward': rew.mean().detach().cpu(),
                     'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
                     'Entropy_term': entropy_term.detach().cpu(),
+                    'Joints trajectory': joints_traj,
+                    'Actions trajectory': actions_traj,
 
                     'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 100].detach().cpu()),
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
                     'Critic/Q_values_std': q[torch.abs(q) < 100].std().detach().cpu(),
-                    'Critic/Q_3D': q_output,
+                    'Critic/Q_3D': q_output,                    
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
@@ -204,11 +227,18 @@ class BittleRL(hyper_params):
         return svd
         
         
-    def log_scatter_3d(self, x, y, z, color, xlabel, ylabel, zlabel, color_label):
-        x = x.detach().cpu().numpy()[:, None]
-        y = y.detach().cpu().numpy()[:, None]
-        z = z.detach().cpu().numpy()[:, None]
-        color = color.detach().cpu().numpy()[:, None]
+    def log_scatter_3d(self, x, y, z, color, xlabel, ylabel, zlabel, color_label, torch_tensor=True):
+        if torch_tensor:
+            x = x.detach().cpu().numpy()[:, None]
+            y = y.detach().cpu().numpy()[:, None]
+            z = z.detach().cpu().numpy()[:, None]
+            color = color.detach().cpu().numpy()[:, None]
+        else:
+            x = x[:, None]
+            y = y[:, None]
+            z = z[:, None]
+            color = color[:, None]
+            
 
         data = np.concatenate([x, y, z, color], axis=1)
         df = pd.DataFrame(data, columns=[xlabel, ylabel, zlabel, color_label])

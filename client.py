@@ -44,6 +44,7 @@ def main():
 
     speed = 0
     joints = np.zeros((1, 8), dtype=np.float32)
+    sample_action = np.zeros((1, 4), dtype=np.float32)
         
     while step < MAX_STEPS:
         dist = 0
@@ -57,8 +58,7 @@ def main():
 
         speed = np.array(speed, dtype=np.float32)
 
-        
-        action, sample_action, joints = bittle.get_action(params, (joints, speed))
+        action, sample_action, joints = bittle.get_action(params, (joints, speed, sample_action))
         sample_action = sample_action.detach().numpy().squeeze()
         joints = joints.detach().numpy()
         

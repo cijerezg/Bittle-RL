@@ -84,6 +84,7 @@ class Critic(nn.Module):
         self.embed_joints = nn.Linear(8, hidden_dim) # Joints are the servos
         self.embed_dist = nn.Linear(1, hidden_dim)
         self.embed_actions = nn.Linear(4, hidden_dim)
+        self.embed_prev_actions = nn.Linear(4, hidden_dim)
         
         # Actions
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
@@ -98,6 +99,8 @@ class Critic(nn.Module):
         self.embed_joints_n = nn.LayerNorm(hidden_dim)
         self.embed_dist_n = nn.LayerNorm(hidden_dim)
         self.embed_actions_n = nn.LayerNorm(hidden_dim)
+        self.embed_prev_actions_n = nn.LayerNorm(hidden_dim)
+        
 
         self.deep_layer1_n = nn.LayerNorm(hidden_dim)
         self.deep_layer2_n = nn.LayerNorm(hidden_dim)
@@ -108,12 +111,13 @@ class Critic(nn.Module):
         
         
 
-    def forward(self, joints, dist, actions):
+    def forward(self, joints, dist, actions, prev_actions):
         joints = self.embed_joints_n(F.relu(self.embed_joints(joints)))
         dist = self.embed_dist_n(F.relu(self.embed_dist(dist)))
         actions = self.embed_actions_n(F.relu(self.embed_actions(actions)))
+        prev_actions = self.embed_prev_actions_n(F.relu(self.embed_prev_actions(prev_actions)))
         
-        x = joints + dist + actions
+        x = joints + dist + actions + prev_actions
 
         x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
         x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
@@ -133,6 +137,7 @@ class Policy(nn.Module):
         # Joints and distance
         self.embed_joints = nn.Linear(8, hidden_dim)
         self.embed_speed = nn.Linear(1, hidden_dim)
+        self.embed_prev_actions = nn.Linear(4, hidden_dim)
 
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
         self.deep_layer2 = nn.Linear(hidden_dim, hidden_dim)
@@ -147,14 +152,16 @@ class Policy(nn.Module):
 
         self.embed_joints_n = nn.LayerNorm(hidden_dim)
         self.embed_dist_n = nn.LayerNorm(hidden_dim)
+        self.embed_prev_actions_n = nn.LayerNorm(hidden_dim)
         self.deep_layer1_n = nn.LayerNorm(hidden_dim)
         self.deep_layer2_n = nn.LayerNorm(hidden_dim)
         
 
-    def forward(self, joints, speed):
+    def forward(self, joints, speed, prev_actions):
         embedded_joints = self.embed_joints_n(F.relu(self.embed_joints(joints)))
         speed = self.embed_dist_n(F.relu(self.embed_speed(speed)))
-        x = embedded_joints + speed
+        prev_actions = self.embed_prev_actions_n(F.relu(self.embed_prev_actions(prev_actions)))
+        x = embedded_joints + speed + prev_actions
 
         x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
         x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
