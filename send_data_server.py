@@ -9,8 +9,8 @@ def shell_cmd(ip, path, file):
     
 
 def main():
-    ip = '192.168.0.102' #Liz ip
-    #ip = '10.22.133.234'
+    #ip = '192.168.0.102' #Liz ip
+    ip = '10.22.133.234'
     local_path = 'checkpoints'
     remote_path = '/home/carlos/Documents/Bittle-RL/'
 

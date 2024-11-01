@@ -59,7 +59,7 @@ class BittleRL(hyper_params):
         self.experience_buffer = experience_buffer
         self.actor = actor
         self.critic = critic
-        self.log_data_freq = 200 # data is logged every 512 steps
+        self.log_data_freq = 100 # data is logged every 512 steps
 
         self.log_alpha_skill = torch.tensor(INIT_LOG_ALPHA, dtype=torch.float32,
                                             requires_grad=True, device=self.device)
@@ -135,6 +135,11 @@ class BittleRL(hyper_params):
             policy_output = self.log_scatter_3d(sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3],
                                                 'Dim 1', 'Dim 2', 'Dim 3', 'Dim 4')
 
+            q_output = self.log_scatter_3d(q.squeeze(), q_target.squeeze(), rew.squeeze(), next_dist.squeeze(),
+                                           'Q', 'Q target', 'Reward', 'Speed')
+
+            q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), rew.squeeze(), next_dist.squeeze(),
+                                              'Q off-policy', 'Q pi', 'Reward', 'Speed')
             
             wandb.log(
                 {
@@ -146,13 +151,15 @@ class BittleRL(hyper_params):
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
                     'Critic/Q_values_std': q[torch.abs(q) < 100].std().detach().cpu(),
+                    'Critic/Q_3D': q_output,
 
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
                     'Policy/mu_mean_across_samples': sample.std(0).mean().detach().cpu(),
                     'Policy/sample': policy_output,
                     'Policy/std': std.mean().detach().cpu(),
-                    'Policy/alpha': alpha_skill.detach().cpu(),                    
+                    'Policy/alpha': alpha_skill.detach().cpu(),
+                    'Policy/q_improv_pi': q_improv_pi
                 }
             )
 
@@ -211,7 +218,16 @@ class BittleRL(hyper_params):
         fig_scatter.update_layout(scene=dict(aspectmode='cube'))
 
         return fig_scatter
+                    
+    def log_histogram_2d(self, x, y, xlabel, ylabel):
+        x = x.detach().cpu().numpy()[:, None]
+        y = y.detach().cpu().numpy()[:, None]
 
-        
-        
-        
+        data = np.concatenate([x, y], axis=1)
+        df = pd.DataFrame(data, columns=[xlabel, ylabel])
+
+        fig_heatmap = px.density_heatmap(df, x=xlabel, y=ylabel,
+                                         marginal_x='histogram',
+                                         marginal_y='histogram',
+                                         nbinsx=60,
+                                         nbinsy=60)

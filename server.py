@@ -41,10 +41,10 @@ config = {
     'discount': 0.97,
     'gradient_steps': 16,
 
-    'reset_frequency': 20003,
+    'reset_frequency': 30000,
     'delta_entropy': 8,
     'load_pretrained_models': False,
-    'max_iterations': 20002
+    'max_iterations': 16003
 }
 
     
