@@ -60,9 +60,10 @@ class OfflineTraining():
         skill = skill - offset
         skill = skill / 8
 
-        seed = np.random.RandomState(12345)
-        prev_random_inits = 10 * (seed.rand(8 * skill.shape[0], 8) - .5)
-        random_inits = 10 * (seed.rand(8 * skill.shape[0], 8) - .5)
+        seed1 = np.random.RandomState(12345)
+        seed2 = np.random.RandomState(12345654)
+        prev_random_inits = 7 * (seed1.rand(8 * skill.shape[0], 8) - .5)
+        random_inits = 7 * (seed2.rand(8 * skill.shape[0], 8) - .5)
         random_inits = prev_random_inits * .8 + random_inits * .2
         
         closest_idxs = np.argmin(np.linalg.norm(random_inits[:, np.newaxis] - skill, axis=2), axis=1)
@@ -78,7 +79,7 @@ class OfflineTraining():
                                       random_inits[:, np.newaxis, :],
                                       skills_vals), axis=1)
         
-        f = interp1d(x, skills_vals, axis=1, kind='cubic')
+        f = interp1d(x, skills_vals, axis=1, kind='linear')
 
         x = np.arange(9)        
         new_skills = f(x)
@@ -86,13 +87,6 @@ class OfflineTraining():
         skill = np.tile(skill, (5, 1))
         cutoff = skill.shape[0] // self.skill_length
         skill = skill[:8*cutoff, :]
-
-
-        offset = np.array([40, 40, 40, 40, 20, 20, 20, 20], dtype=np.float32)
-        offset = offset[np.newaxis, :]
-
-        skill = skill - offset
-        skill = skill / 8
 
         
         indices = np.arange(skill.shape[0] - 7)[:, np.newaxis] + np.arange(8)
@@ -122,6 +116,7 @@ class OfflineTraining():
 
             sns.heatmap(rec[0,:].detach().cpu().numpy(), ax=axes[1], cmap="viridis", cbar=True, annot=True)
             axes[1].set_title('Reconstruction')
+            print(z[0, :])
 
             plt.tight_layout()
             plt.show()

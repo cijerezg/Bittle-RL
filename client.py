@@ -10,7 +10,7 @@ import os
 import pdb
 
 
-MAX_STEPS = 400
+MAX_STEPS = 100
 FRAMES = 8
 ACTION_DIM = 8
 

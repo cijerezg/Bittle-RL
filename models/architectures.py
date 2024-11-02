@@ -72,6 +72,8 @@ class Decoder(nn.Module):
 
         for i in range(1, 8):
             x[:, i, :] = x[:, i-1, :] * .7 + x[:, i, :] * .3
+
+        x = 4 * torch.tanh(x / 4)
             
         return x
 

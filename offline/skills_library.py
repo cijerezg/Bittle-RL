@@ -111,7 +111,7 @@ def upsample(data, new_n):
     x_old = np.arange(n)
     x_new = np.linspace(0, n-1, new_n)
     
-    f = interp1d(x_old, data, axis=0, kind='cubic')
+    f = interp1d(x_old, data, axis=0, kind='linear')
     return f(x_new)
 
 # Downsampling
