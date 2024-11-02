@@ -15,6 +15,8 @@ from skills_library import *
 import pdb
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.interpolate import interp1d
+
 
 class OfflineTraining():
     def __init__(self):
@@ -49,21 +51,62 @@ class OfflineTraining():
         
                 
     def process_skill(self, skill):
-        add = len(skill) % self.skill_length
-        skill.extend(skill[0:add])        
         skill = np.array(skill, dtype=np.float32).reshape(-1, 8)
+
 
         offset = np.array([40, 40, 40, 40, 20, 20, 20, 20], dtype=np.float32)
         offset = offset[np.newaxis, :]
 
         skill = skill - offset
-        skill = skill / 15
+        skill = skill / 8
+
+        seed = np.random.RandomState(12345)
+        prev_random_inits = 10 * (seed.rand(8 * skill.shape[0], 8) - .5)
+        random_inits = 10 * (seed.rand(8 * skill.shape[0], 8) - .5)
+        random_inits = prev_random_inits * .8 + random_inits * .2
+        
+        closest_idxs = np.argmin(np.linalg.norm(random_inits[:, np.newaxis] - skill, axis=2), axis=1)
+        closest_idxs = closest_idxs[:, np.newaxis] + np.arange(4)
+        closest_idxs = closest_idxs % skill.shape[0]
+        
+        skills_vals = skill[closest_idxs, :]
+
+        x = np.array([0, 1, 5, 6, 7, 8])
+
+        
+        skills_vals = np.concatenate((prev_random_inits[:, np.newaxis, :],
+                                      random_inits[:, np.newaxis, :],
+                                      skills_vals), axis=1)
+        
+        f = interp1d(x, skills_vals, axis=1, kind='cubic')
+
+        x = np.arange(9)        
+        new_skills = f(x)
+
+        skill = np.tile(skill, (5, 1))
+        cutoff = skill.shape[0] // self.skill_length
+        skill = skill[:8*cutoff, :]
+
+
+        offset = np.array([40, 40, 40, 40, 20, 20, 20, 20], dtype=np.float32)
+        offset = offset[np.newaxis, :]
+
+        skill = skill - offset
+        skill = skill / 8
+
         
         indices = np.arange(skill.shape[0] - 7)[:, np.newaxis] + np.arange(8)
         init_state = skill[indices[:-1, 0]]
         init_state = np.concatenate((init_state[0,:][None, :], init_state), axis=0)
 
         skill = skill[indices]
+
+        skill = np.concatenate((skill, new_skills[:, 1:, :]), axis=0)
+        init_state = np.concatenate((init_state, new_skills[:, 0, :]), axis=0)
+
+        skill = np.array(skill, dtype=np.float32)
+        init_state = np.array(init_state, dtype=np.float32)
+        
 
         return skill, init_state
 
@@ -74,10 +117,10 @@ class OfflineTraining():
         if plot:
             fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
-            sns.heatmap(skill[0,:].detach().cpu().numpy(), ax=axes[0], cmap="viridis", cbar=True)
+            sns.heatmap(skill[0,:].detach().cpu().numpy(), ax=axes[0], cmap="viridis", cbar=True, annot=True)
             axes[0].set_title('Skill')
 
-            sns.heatmap(rec[0,:].detach().cpu().numpy(), ax=axes[1], cmap="viridis", cbar=True)
+            sns.heatmap(rec[0,:].detach().cpu().numpy(), ax=axes[1], cmap="viridis", cbar=True, annot=True)
             axes[1].set_title('Reconstruction')
 
             plt.tight_layout()

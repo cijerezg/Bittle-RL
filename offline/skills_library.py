@@ -98,8 +98,7 @@ skills = [
     ],
 ]
 
-
-
+  
 
 import numpy as np
 from scipy import signal
@@ -112,32 +111,27 @@ def upsample(data, new_n):
     x_old = np.arange(n)
     x_new = np.linspace(0, n-1, new_n)
     
-    f = interp1d(x_old, data, axis=0, kind='linear')
+    f = interp1d(x_old, data, axis=0, kind='cubic')
     return f(x_new)
 
 # Downsampling
 def downsample(data, new_n):
     return signal.resample(data, new_n, axis=0)
 
-new_skills = []
 
+new_skills = []
 
 for skill in skills:
     skill = np.array(skill).reshape(-1, 8)
-    upsampled_data1 = upsample(skill, skill.shape[0] * 2)
-    upsampled_data2 = upsample(skill, int(skill.shape[0] * 1.8))
-    upsampled_data3 = upsample(skill, int(skill.shape[0] * 1.2))
-    upsampled_data3 = upsample(skill, int(skill.shape[0] * 1.5))    
-    downsampled_data2 = downsample(skill, int(skill.shape[0] // 1.2))
+    upsampled_data = upsample(skill, int(skill.shape[0] * 1.2))
+    downsampled_data = downsample(skill, int(skill.shape[0] / 1.2))
 
+    
 
     new_skills.append(skill.flatten().tolist())
-    new_skills.append(upsampled_data1.flatten().tolist())
-    new_skills.append(upsampled_data2.flatten().tolist())
-    new_skills.append(upsampled_data3.flatten().tolist())    
-    new_skills.append(downsampled_data1.flatten().tolist())
-    new_skills.append(downsampled_data2.flatten().tolist())
-    new_skills.append(downsampled_data3.flatten().tolist())
+    new_skills.append(upsampled_data.flatten().tolist())
+    new_skills.append(downsampled_data.flatten().tolist())
+    
 
-
+    
 skills = new_skills

@@ -19,9 +19,9 @@ class Encoder(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.embed_actions = nn.Conv1d(8, 32, 3)
+        self.embed_actions = nn.Conv1d(8, 64, 3)
 
-        self.layer1 = nn.Conv1d(32, 16, 3)
+        self.layer1 = nn.Conv1d(64, 16, 3)
         self.layer2 = nn.Conv1d(16, 8, 3)
 
         self.mu_hidden = nn.Linear(16, 16)
@@ -56,9 +56,9 @@ class Decoder(nn.Module):
 
         self.layer1 = nn.Linear(4, 32)
 
-        self.deconv1 = nn.ConvTranspose1d(16, 32, 3)
-        self.deconv2 = nn.ConvTranspose1d(32, 32, 3)
-        self.deconv3 = nn.ConvTranspose1d(32, 8, 3, groups=8)
+        self.deconv1 = nn.ConvTranspose1d(16, 64, 3)
+        self.deconv2 = nn.ConvTranspose1d(64, 64, 3)
+        self.deconv3 = nn.ConvTranspose1d(64, 8, 3, groups=8)
 
     def forward(self, x, obs):
         x = F.relu(self.layer1(x))

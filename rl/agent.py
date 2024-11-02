@@ -35,13 +35,13 @@ class Actor():
         sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
         return sample, density, mu, std
 
-    def robot_action(self, sample, params, joints, prev_action):
+    def robot_action(self, sample, params, joints):
         sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
         out_joints = sample[:, -1, :]
         r_action = [48, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
-        sample = 15 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
+        sample = 8 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
@@ -167,8 +167,6 @@ class BittleRL(hyper_params):
                     'Sampled_reward': rew.mean().detach().cpu(),
                     'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
                     'Entropy_term': entropy_term.detach().cpu(),
-                    'Joints trajectory': joints_traj,
-                    'Actions trajectory': actions_traj,
 
                     'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 100].detach().cpu()),
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
@@ -176,6 +174,8 @@ class BittleRL(hyper_params):
                     'Critic/Q_values_std': q[torch.abs(q) < 100].std().detach().cpu(),
                     'Critic/Q_3D': q_output,                    
 
+                    'Policy/Joints trajectory': joints_traj,
+                    'Policy/Actions trajectory': actions_traj,
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
                     'Policy/mu_mean_across_samples': sample.std(0).mean().detach().cpu(),
