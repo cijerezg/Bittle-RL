@@ -68,10 +68,10 @@ class Decoder(nn.Module):
         x = F.relu(self.deconv2(x))
         x = self.deconv3(x)
 
-        x[:, 0, :] = obs * .7 + x[:, 0, :]
+        x[:, 0, :] = obs * .75 + x[:, 0, :] * .25
 
         for i in range(1, 8):
-            x[:, i, :] = x[:, i-1, :] * .7 + x[:, i, :] * .3
+            x[:, i, :] = x[:, i-1, :] * .75 + x[:, i, :] * .25
 
         x = 4 * torch.tanh(x / 4)
             

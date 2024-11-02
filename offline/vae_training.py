@@ -67,13 +67,12 @@ class OfflineTraining():
         random_inits = prev_random_inits * .8 + random_inits * .2
         
         closest_idxs = np.argmin(np.linalg.norm(random_inits[:, np.newaxis] - skill, axis=2), axis=1)
-        closest_idxs = closest_idxs[:, np.newaxis] + np.arange(4)
+        closest_idxs = closest_idxs[:, np.newaxis] + np.arange(3)
         closest_idxs = closest_idxs % skill.shape[0]
         
         skills_vals = skill[closest_idxs, :]
 
-        x = np.array([0, 1, 5, 6, 7, 8])
-
+        x = np.array([0, 1, 6, 7, 8])
         
         skills_vals = np.concatenate((prev_random_inits[:, np.newaxis, :],
                                       random_inits[:, np.newaxis, :],
@@ -84,7 +83,7 @@ class OfflineTraining():
         x = np.arange(9)        
         new_skills = f(x)
 
-        skill = np.tile(skill, (5, 1))
+        skill = np.tile(skill, (8, 1))
         cutoff = skill.shape[0] // self.skill_length
         skill = skill[:8*cutoff, :]
 
@@ -179,7 +178,7 @@ params = get_params(models, names, pretrained_models)
 keys_optimizers = ['VAE']
 optimizers = set_optimizers(params, keys_optimizers, 3e-4)
 
-for i in range(1200):
+for i in range(800):
     params = training.train(params, optimizers, 0.05, i)
 
 

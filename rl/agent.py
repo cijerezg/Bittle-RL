@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 import numpy as np
+from sklearn.decomposition import PCA
 
 
 INIT_LOG_ALPHA = 0
@@ -134,15 +135,13 @@ class BittleRL(hyper_params):
             last_return = self.experience_buffer.dist_buf[last_eps, :].mean()
 
             joints = self.experience_buffer.joints_buf[last_eps, :, :].squeeze()
-
             actions = self.experience_buffer.a_buf[last_eps, :, :].squeeze()
-            
-            seed = np.random.RandomState(1234567)            
-            proj_matrix_j = seed.randn(8, 3)
-            proj_matrix_a = seed.randn(4, 3)
 
-            traj_joints = np.matmul(joints, proj_matrix_j)
-            traj_actions = np.matmul(actions, proj_matrix_a)
+            j_pca = PCA(n_components=3)
+            traj_joints = j_pca.fit_transform(joints)
+
+            a_pca = PCA(n_components=3)
+            traj_actions = a_pca.fit_transform(actions)
                                     
             wandb.log({'Average speed': last_return.mean()}, step=iterations)
 

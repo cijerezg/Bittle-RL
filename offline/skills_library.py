@@ -124,13 +124,11 @@ new_skills = []
 for skill in skills:
     skill = np.array(skill).reshape(-1, 8)
     upsampled_data = upsample(skill, int(skill.shape[0] * 1.2))
-    downsampled_data = downsample(skill, int(skill.shape[0] / 1.2))
-
-    
+    # downsampled_data = downsample(skill, int(skill.shape[0] / 1.2))
 
     new_skills.append(skill.flatten().tolist())
     new_skills.append(upsampled_data.flatten().tolist())
-    new_skills.append(downsampled_data.flatten().tolist())
+#    new_skills.append(downsampled_data.flatten().tolist())
     
 
     
