@@ -62,8 +62,8 @@ class OfflineTraining():
 
         seed1 = np.random.RandomState(12345)
         seed2 = np.random.RandomState(12345654)
-        prev_random_inits = 7 * (seed1.rand(8 * skill.shape[0], 8) - .5)
-        random_inits = 7 * (seed2.rand(8 * skill.shape[0], 8) - .5)
+        prev_random_inits = 7 * (seed1.rand(4 * skill.shape[0], 8) - .5)
+        random_inits = 7 * (seed2.rand(4 * skill.shape[0], 8) - .5)
         random_inits = prev_random_inits * .8 + random_inits * .2
         
         closest_idxs = np.argmin(np.linalg.norm(random_inits[:, np.newaxis] - skill, axis=2), axis=1)
