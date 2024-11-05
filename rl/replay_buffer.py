@@ -48,7 +48,7 @@ class ReplayBuffer():
         eps = np.random.randint(0, self.eps, size=batch_size)
         eps = eps[:, np.newaxis]
 
-        target_vel = 0.09
+        target_vel = 0.10
 
         vel = self.dist_buf[eps, idxs+1, :]
         

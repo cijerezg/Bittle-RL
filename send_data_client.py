@@ -31,7 +31,7 @@ def main():
                 cmd = shell_cmd(ip, remote_file, local_file)
                 subprocess.run(cmd, shell=True) 
                 subprocess.run(f'rm {local_file}', shell=True)
-        time.sleep(.1)
+        time.sleep(.05)
                 
         
 main()

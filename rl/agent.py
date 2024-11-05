@@ -6,6 +6,7 @@ from models.architectures import Critic, Policy, Decoder
 import copy
 from torch.func import functional_call
 import torch.nn.functional as F
+import torch.nn as nn
 import numpy as np
 from stable_baselines3.common.utils import polyak_update
 import wandb
@@ -61,7 +62,7 @@ class BittleRL(hyper_params):
         self.experience_buffer = experience_buffer
         self.actor = actor
         self.critic = critic
-        self.log_data_freq = 100 # data is logged every 512 steps
+        self.log_data_freq = 20 # data is logged every 512 steps
 
         self.log_alpha_skill = torch.tensor(INIT_LOG_ALPHA, dtype=torch.float32,
                                             requires_grad=True, device=self.device)
@@ -70,7 +71,7 @@ class BittleRL(hyper_params):
         self.prior = Normal(0, 1)
         
 
-    def training_iteration(self, params, optimizers, transition, iterations):
+    def training_iteration(self, params, optimizers, transition, iterations, ref_params):
         self.experience_buffer.add(transition)
 
         log_data = True if iterations % self.log_data_freq == 0 else False
@@ -78,7 +79,7 @@ class BittleRL(hyper_params):
         if self.experience_buffer.eps >= 1:
             for i in range(self.gradient_steps):
                 log_data = log_data if i == 0 else False
-                policy_loss, critic_loss = self.losses(params, log_data, iterations)
+                policy_loss, critic_loss = self.losses(params, log_data, iterations, ref_params)
                 losses = [policy_loss, critic_loss]
                 keys = ['Policy', 'Critic']
                 params = Adam_update(params, losses, keys, optimizers)
@@ -88,7 +89,7 @@ class BittleRL(hyper_params):
         return params
 
 
-    def losses(self, params, log_data, iterations):
+    def losses(self, params, log_data, iterations, ref_params):
         batch = self.experience_buffer.sample(batch_size=256)
 
         dist = torch.from_numpy(batch.dist).to(self.device)
@@ -153,12 +154,17 @@ class BittleRL(hyper_params):
 
             q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), rew.squeeze(), next_dist.squeeze(),
                                               'Q off-policy', 'Q pi', 'Reward', 'Speed')
-
+            
             joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(100),
                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
-
+            
             actions_traj = self.log_scatter_3d(traj_actions[:, 0], traj_actions[:, 1], traj_actions[:, 2], np.arange(100),
                                                'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
+
+            q_dist = self.log_histogram_2d(q.squeeze(), q_target.squeeze(), 'Q vals', 'Q target')
+
+            dist_critic = self.distance_to_params(params, ref_params, 'Critic', 'Critic')
+            dist_policy = self.distance_to_params(params, ref_params, 'Policy', 'Policy')
 
             
             wandb.log(
@@ -171,17 +177,20 @@ class BittleRL(hyper_params):
                     'Critic/Mean_Q_value': q.mean().detach().cpu(),
                     'Critic/Critic_loss': critic_loss.detach().cpu(),
                     'Critic/Q_values_std': q[torch.abs(q) < 100].std().detach().cpu(),
-                    'Critic/Q_3D': q_output,                    
+                    'Critic/Q_3D': q_output,
+                    'Critic/Q_distribution': q_dist,
+                    'Critic/Distance_to_init': dist_critic,
 
                     'Policy/Joints trajectory': joints_traj,
                     'Policy/Actions trajectory': actions_traj,
+                    'Policy/Distance_to_init': dist_policy,
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
                     'Policy/mu_mean_across_samples': sample.std(0).mean().detach().cpu(),
                     'Policy/sample': policy_output,
                     'Policy/std': std.mean().detach().cpu(),
                     'Policy/alpha': alpha_skill.detach().cpu(),
-                    'Policy/q_improv_pi': q_improv_pi
+                    'Policy/q_improv_pi': q_improv_pi                    
                 }
             )
 
@@ -260,3 +269,12 @@ class BittleRL(hyper_params):
                                          marginal_y='histogram',
                                          nbinsx=60,
                                          nbinsy=60)
+
+        return fig_heatmap
+
+
+    def distance_to_params(self, params1, params2, name1, name2):
+        with torch.no_grad():
+            vec1 = nn.utils.parameters_to_vector(params1[name1].values())
+            target_vec1 = nn.utils.parameters_to_vector(params2[name2].values())
+        return torch.norm(vec1 - target_vec1)

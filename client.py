@@ -71,7 +71,7 @@ def main():
 
         old_dist = dist
                
-        if step % 20 == 0:
+        if step % 5 == 0:
             updated_policy = load_params(path_params)
         
             if updated_policy:

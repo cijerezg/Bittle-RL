@@ -45,7 +45,7 @@ config = {
     'reset_frequency': 30000,
     'delta_entropy': 8,
     'load_pretrained_models': False,
-    'max_iterations': 80000
+    'max_iterations': 80s000
 }
 
     
