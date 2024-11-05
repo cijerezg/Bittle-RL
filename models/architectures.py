@@ -56,9 +56,9 @@ class Decoder(nn.Module):
 
         self.layer1 = nn.Linear(4, 32)
 
-        self.deconv1 = nn.ConvTranspose1d(16, 64, 3)
-        self.deconv2 = nn.ConvTranspose1d(64, 64, 3)
-        self.deconv3 = nn.ConvTranspose1d(64, 8, 3, groups=8)
+        self.deconv1 = nn.ConvTranspose1d(16, 32, 3)
+        self.deconv2 = nn.ConvTranspose1d(32, 32, 3)
+        self.deconv3 = nn.ConvTranspose1d(32, 8, 3, groups=8)
 
     def forward(self, x, obs):
         x = F.relu(self.layer1(x))
@@ -133,7 +133,7 @@ class Critic(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, device, action_range=5, hidden_dim=128):
+    def __init__(self, device, action_range=5, hidden_dim=32):
         super().__init__()
 
         # Joints and distance
@@ -142,13 +142,12 @@ class Policy(nn.Module):
         self.embed_prev_actions = nn.Linear(4, hidden_dim)
 
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
-        self.deep_layer2 = nn.Linear(hidden_dim, hidden_dim)
 
-        self.deep_mu = nn.Linear(hidden_dim, 64)
-        self.deep_log_std = nn.Linear(hidden_dim, 64)
+        self.deep_mu = nn.Linear(hidden_dim, 16)
+        self.deep_log_std = nn.Linear(hidden_dim, 16)
 
-        self.mu = nn.Linear(64, 4)
-        self.log_std = nn.Linear(64, 4)
+        self.mu = nn.Linear(16, 4)
+        self.log_std = nn.Linear(16, 4)
 
         self.action_range = action_range
 
@@ -166,7 +165,6 @@ class Policy(nn.Module):
         x = embedded_joints + speed + prev_actions
 
         x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
-        x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
 
         mu = F.relu(self.deep_mu(x))
         mu = self.mu(mu)

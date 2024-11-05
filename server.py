@@ -45,7 +45,7 @@ config = {
     'reset_frequency': 30000,
     'delta_entropy': 8,
     'load_pretrained_models': False,
-    'max_iterations': 80000
+    'max_iterations': 20000
 }
 
     
@@ -91,6 +91,9 @@ def main(config=None):
         iterations = 0
         print('Starting')
         while iterations < config.max_iterations:
+            if iterations % 100 == 0:
+                pdb.set_trace()
+            
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations, ref_params)
             

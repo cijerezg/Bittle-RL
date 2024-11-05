@@ -14,7 +14,7 @@ import pdb
 
        
 class ReplayBuffer():
-    def __init__(self, episode_length=100, episodes=10000):
+    def __init__(self, episode_length=200, episodes=10000):
         self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
         self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
         self.a_buf = np.zeros((episodes, episode_length, 4), dtype=np.float32)
@@ -31,7 +31,7 @@ class ReplayBuffer():
                 dist = np.clip(dist, -4, 4)
                 a = transition[2]
                 # temporary line to reshape action
-                if np.abs(dist) > 2.5:
+                if np.abs(dist) > 5.0:
                     continue
                 
                 self.joints_buf[self.eps, self.ptr] = joints
