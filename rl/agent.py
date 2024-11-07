@@ -37,17 +37,22 @@ class Actor():
         sample, density, mu, std = functional_call(self.policy, params['Policy'], x)
         return sample, density, mu, std
 
-    def robot_action(self, sample, params, joints):
-        sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
+    def robot_action(self, sample, previous_sample, params):
+        #sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
+        delta = sample - previous_sample
+        
+        
+        
+        
         out_joints = sample[:, -1, :]
-        r_action = [16, 0, 0, 1]
+        r_action = [12, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
         sample = 8 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
-        sample = np.pad(sample, ((0, 8), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
+        sample = np.pad(sample, ((0, 4), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
         sample = sample.flatten().astype(np.int32).tolist()
         r_action.extend(sample)
         

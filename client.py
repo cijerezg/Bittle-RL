@@ -60,14 +60,15 @@ def main():
 
         action, sample_action, joints = bittle.get_action(params, (joints, speed, sample_action))
         sample_action = sample_action.detach().numpy().squeeze()
-        joints = joints.detach().numpy()
-        
+        joints = joints.detach().numpy()        
         save_experiences(path_exp, (joints, speed, sample_action), step) 
 
-        print(f'Step is :{step}; speed is {speed}; distance is {dist}')
-        
+        now = time.time()
         bittle.execute_action(action)
         step += 1
+        time_elapsed = time.time() - now
+        
+        print(f'Step is :{step}; speed is {speed}; distance is {dist}; time to skill: {time_elapsed}')
 
         old_dist = dist
                

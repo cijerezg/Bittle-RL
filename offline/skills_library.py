@@ -103,6 +103,7 @@ skills = [
 import numpy as np
 from scipy import signal
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 import pdb
 
 # Upsampling
@@ -123,6 +124,7 @@ new_skills = []
 
 for skill in skills:
     skill = np.array(skill).reshape(-1, 8)
+    pdb.set_trace()
     upsampled_data = upsample(skill, int(skill.shape[0] * 1.2))
     # downsampled_data = downsample(skill, int(skill.shape[0] / 1.2))
 
