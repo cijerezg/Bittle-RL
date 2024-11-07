@@ -35,6 +35,8 @@ class Robot():
         state = (prev_action,  speed)
         
         sample, density, mu, std = self.actor.run_policy(params, state)
+        sample = sample.detach().cpu().numpy()
+        prev_action = prev_action.detach().cpu().numpy()
         r_action = self.actor.robot_action(sample, prev_action, params)
         
         return r_action, sample

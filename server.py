@@ -52,7 +52,7 @@ config = {
 
 def main(config=None):
     print('Running')
-    with wandb.init(project='BittleRL-v1', config=config):
+    with wandb.init(project='BittleRL-v2', config=config):
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         create_dir(policy_folder)
@@ -91,9 +91,6 @@ def main(config=None):
         iterations = 0
         print('Starting')
         while iterations < config.max_iterations:
-            if iterations % 100 == 0:
-                pdb.set_trace()
-            
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations, ref_params)
             

@@ -10,6 +10,13 @@ import os
 import pdb
 
 
+# Remember to run:
+# pinctrl FAN_PWM op dl
+# To have the fan run at full speed always
+
+# command to monitor temperature
+# watch -n 1 vcgencmd measure_temp
+
 MAX_STEPS = 400
 FRAMES = 8
 ACTION_DIM = 8
@@ -51,7 +58,7 @@ def main():
         speed = np.array(speed, dtype=np.float32)
 
         action, sample_action = bittle.get_action(params, (prev_action, speed))
-        sample_action = sample_action.detach().numpy().squeeze()
+        sample_action = sample_action.squeeze()
         
         save_experiences(path_exp, (sample_action, speed), step)
 
@@ -60,7 +67,7 @@ def main():
         bittle.execute_action(action)
         step += 1
         
-        print(f'Step is :{step}; speed is {speed}; distance is {dist})
+        print(f'Step is :{step}; speed is {speed}; distance is {dist}')
 
         old_dist = dist
                

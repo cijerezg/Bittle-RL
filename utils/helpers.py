@@ -65,13 +65,12 @@ def load_experiences(path, delete=True):
         for exp_file in files:
             try:                
                 with np.load(exp_file) as data:
-                    exps.append([data['arr_0'], data['arr_1'], data['arr_2']])
+                    exps.append([data['arr_0'], data['arr_1']])
                     dt_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
                     if path == 'experiences':
-                        joints = data['arr_0']
-                        dist = data['arr_1']
-                        a = data['arr_2']
-                        np.savez(f'experiences-library/a_{dt_string}.npz', joints, dist, a)
+                        action = data['arr_0']
+                        speed = data['arr_1']
+                        np.savez(f'experiences-library/a_{dt_string}.npz', action, speed)
             except EOFError:
                 print(f'unable to read experience with name {exp_file}')
             if delete:

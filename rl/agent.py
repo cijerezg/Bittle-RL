@@ -45,10 +45,9 @@ class Actor():
         sample = previous_sample[np.newaxis, :] + interpolated_point
                         
         r_action = [12, 0, 0, 1]
-        sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
         sample = 8 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        offset = np.array([40, 40, 40, 40, 20, 20, 20, 20])
+        offset = np.array([35, 35, 35, 35, 20, 20, 20, 20])
         offset = offset[np.newaxis, :]
         sample = sample + offset
         sample = np.pad(sample, ((0, 4), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
@@ -102,6 +101,8 @@ class BittleRL(hyper_params):
         next_speed = torch.from_numpy(batch.next_speed).to(self.device)
         reward = torch.from_numpy(batch.reward).to(self.device)
 
+        speed = speed.reshape(-1, 1)
+        next_speed = next_speed.reshape(-1, 1)
 
         with torch.no_grad():
             next_sample, _, _, _ = self.actor.run_policy(params, (action, next_speed))
@@ -136,21 +137,15 @@ class BittleRL(hyper_params):
         if log_data:
             last_eps = self.experience_buffer.eps - 1
             
-            last_return = self.experience_buffer.dist_buf[last_eps, :].mean()
+            last_return = self.experience_buffer.speed_buf[last_eps, :].mean()
 
-            joints = self.experience_buffer.joints_buf[last_eps, :, :].squeeze()
-            actions = self.experience_buffer.a_buf[last_eps, :, :].squeeze()
+            actions = self.experience_buffer.action_buf[last_eps, :, :].squeeze()
 
             j_pca = PCA(n_components=3)
-            traj_joints = j_pca.fit_transform(joints)
+            traj_joints = j_pca.fit_transform(actions)
 
-            a_pca = PCA(n_components=3)
-            traj_actions = a_pca.fit_transform(actions)
                                     
             wandb.log({'Average speed': last_return.mean()}, step=iterations)
-
-            policy_output = self.log_scatter_3d(sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3],
-                                                'Dim 1', 'Dim 2', 'Dim 3', 'Dim 4')
 
             q_output = self.log_scatter_3d(q.squeeze(), q_target.squeeze(), reward.squeeze(), next_speed.squeeze(),
                                            'Q', 'Q target', 'Reward', 'Speed')
@@ -158,12 +153,9 @@ class BittleRL(hyper_params):
             q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), reward.squeeze(), next_speed.squeeze(),
                                               'Q off-policy', 'Q pi', 'Reward', 'Speed')
             
-            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(200),
+            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(10),
                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
             
-            actions_traj = self.log_scatter_3d(traj_actions[:, 0], traj_actions[:, 1], traj_actions[:, 2], np.arange(200),
-                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
-
             q_dist = self.log_histogram_2d(q.squeeze(), q_target.squeeze(), 'Q vals', 'Q target')
 
             dist_critic = self.distance_to_params(params, ref_params, 'Critic', 'Critic')
@@ -172,8 +164,8 @@ class BittleRL(hyper_params):
             
             wandb.log(
                 {
-                    'Sampled_reward': rew.mean().detach().cpu(),
-                    'Sampled_reward_dist': wandb.Histogram(rew.detach().cpu()),
+                    'Sampled_reward': reward.mean().detach().cpu(),
+                    'Sampled_reward_dist': wandb.Histogram(reward.detach().cpu()),
                     'Entropy_term': entropy_term.detach().cpu(),
 
                     'Critic/Q_values': wandb.Histogram(q[torch.abs(q) < 100].detach().cpu()),
@@ -185,12 +177,10 @@ class BittleRL(hyper_params):
                     'Critic/Distance_to_init': dist_critic,
 
                     'Policy/Joints trajectory': joints_traj,
-                    'Policy/Actions trajectory': actions_traj,
                     'Policy/Distance_to_init': dist_policy,
                     'Policy/q_pi': q_pi.mean().detach().cpu(),
                     'Policy/mu_dist': wandb.Histogram(sample.detach().cpu()),
                     'Policy/mu_mean_across_samples': sample.std(0).mean().detach().cpu(),
-                    'Policy/sample': policy_output,
                     'Policy/std': std.mean().detach().cpu(),
                     'Policy/alpha': alpha_skill.detach().cpu(),
                     'Policy/q_improv_pi': q_improv_pi                    
