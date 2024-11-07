@@ -15,10 +15,8 @@ import pdb
        
 class ReplayBuffer():
     def __init__(self, episode_length=200, episodes=10000):
-        self.joints_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
-        self.dist_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
-        self.a_buf = np.zeros((episodes, episode_length, 4), dtype=np.float32)
-        #self.rew_buf = np.zeros((episodes, episode_length, 8, 8), dtype=np.float32)
+        self.action_buf = np.zeros((episodes, episode_length, 8), dtype=np.float32)
+        self.speed_buf = np.zeros((episodes, episode_length, 1), dtype=np.float32)
 
         self.ptr, self.max_steps = 0, episode_length
         self.eps, self.max_episodes = 0, episodes
@@ -26,17 +24,11 @@ class ReplayBuffer():
     def add(self, transitions):
         if transitions is not None:
             for transition in transitions:
-                joints = transition[0]
-                dist = transition[1] # Recall distance is in dm (decimeters)
-                dist = np.clip(dist, -4, 4)
-                a = transition[2]
-                # temporary line to reshape action
-                if np.abs(dist) > 5.0:
-                    continue
+                action = transition[0]
+                speed = np.clip(transition[1], -4, 4) # Recall distance is in dm (decimeters)
                 
-                self.joints_buf[self.eps, self.ptr] = joints
-                self.dist_buf[self.eps, self.ptr] = dist
-                self.a_buf[self.eps, self.ptr] = a
+                self.action_buf[self.eps, self.ptr] = action
+                self.speed_buf[self.eps, self.ptr] = speed
                 
                 self.ptr = (self.ptr + 1) % self.max_steps
                 if self.ptr == self.max_steps - 1:
@@ -50,7 +42,7 @@ class ReplayBuffer():
 
         target_vel = 0.10
 
-        vel = self.dist_buf[eps, idxs+1, :]
+        vel = self.speed_buf[eps, idxs+1, :]
         
         reward = np.where((target_vel<=vel) & (vel<= 2 *target_vel), 1, 0)
         neg_vel_reward = np.where((-target_vel < vel) & (vel < target_vel),
@@ -63,13 +55,12 @@ class ReplayBuffer():
         reward = reward + neg_vel_reward + pos_vel_reward
         reward = np.array(reward, dtype=np.float32)
         
-        batch = AttrDict(joints=self.joints_buf[eps, idxs, :].squeeze(),
-                         dist=self.dist_buf[eps, idxs, :].squeeze(axis=1),
-                         next_joints=self.joints_buf[eps, idxs+1, :].squeeze(),
-                         next_dist=self.dist_buf[eps, idxs+1, :].squeeze(axis=1),
-                         a=self.a_buf[eps, idxs, :].squeeze(),
-                         prev_a=self.a_buf[eps, idxs - 1, :].squeeze(),
-                         rew=reward.squeeze())
+        batch = AttrDict(action=self.action_buf[eps, idxs, :].squeeze(),
+                         prev_action=self.action_buf[eps, idxs - 1, :].squeeze(),
+                         speed=self.speed_buf[eps, idxs, :].squeeze(),
+                         next_speed=self.speed_buf[eps, idxs + 1, :].squeeze(),
+                         reward=reward.squeeze()
+                         )
 
         return batch
 

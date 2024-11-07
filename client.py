@@ -10,7 +10,7 @@ import os
 import pdb
 
 
-MAX_STEPS = 100
+MAX_STEPS = 400
 FRAMES = 8
 ACTION_DIM = 8
 
@@ -25,14 +25,11 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
     actor = Actor(device)
 
-    model, name = [actor.policy, actor.decoder], ['Policy', 'Decoder']
-    decoder_params = torch.load('offline_models/decoder.pt',
-                                weights_only=True, map_location=device)
+    model, name = [actor.policy], ['Policy']
     
-    pretrained_params = [None, decoder_params]
+    pretrained_params = [None]
     params = get_params(model, name, pretrained_params)
 
-    distance_points = 5
     bittle = Robot(actor)
 
     step = 0
@@ -43,32 +40,27 @@ def main():
         params['Policy'] = updated_policy
 
     speed = 0
-    joints = np.zeros((1, 8), dtype=np.float32)
-    sample_action = np.zeros((1, 4), dtype=np.float32)
+    prev_action = np.zeros((1, 8), dtype=np.float32)
         
     while step < MAX_STEPS:
-        dist = 0
-        for i in range(distance_points):
-            measured_dist = bittle.compute_distance()
-            dist += measured_dist
+        dist = bittle.compute_distance()
 
-        dist /= distance_points                
         if step > 0:
             speed = old_dist - dist
 
         speed = np.array(speed, dtype=np.float32)
 
-        action, sample_action, joints = bittle.get_action(params, (joints, speed, sample_action))
+        action, sample_action = bittle.get_action(params, (prev_action, speed))
         sample_action = sample_action.detach().numpy().squeeze()
-        joints = joints.detach().numpy()        
-        save_experiences(path_exp, (joints, speed, sample_action), step) 
+        
+        save_experiences(path_exp, (sample_action, speed), step)
 
-        now = time.time()
+        prev_action = sample_action        
+
         bittle.execute_action(action)
         step += 1
-        time_elapsed = time.time() - now
         
-        print(f'Step is :{step}; speed is {speed}; distance is {dist}; time to skill: {time_elapsed}')
+        print(f'Step is :{step}; speed is {speed}; distance is {dist})
 
         old_dist = dist
                

@@ -40,11 +40,10 @@ class Actor():
     def robot_action(self, sample, previous_sample, params):
         #sample = functional_call(self.decoder, params['Decoder'], (sample, joints))
         delta = sample - previous_sample
-        
-        
-        
-        
-        out_joints = sample[:, -1, :]
+        points = np.arange(0, 1, 0.125) + 0.125
+        interpolated_point = delta[np.newaxis, :] * points[:, np.newaxis]
+        sample = previous_sample[np.newaxis, :] + interpolated_point
+                        
         r_action = [12, 0, 0, 1]
         sample = sample.cpu().detach().numpy()
         sample = sample.squeeze()        
@@ -56,7 +55,7 @@ class Actor():
         sample = sample.flatten().astype(np.int32).tolist()
         r_action.extend(sample)
         
-        return r_action, out_joints
+        return r_action
 
 class BittleRL(hyper_params):
     def __init__(self, experience_buffer, actor, critic, args):             
@@ -97,25 +96,24 @@ class BittleRL(hyper_params):
     def losses(self, params, log_data, iterations, ref_params):
         batch = self.experience_buffer.sample(batch_size=256)
 
-        dist = torch.from_numpy(batch.dist).to(self.device)
-        joints = torch.from_numpy(batch.joints).to(self.device)
-        next_dist = torch.from_numpy(batch.next_dist).to(self.device)
-        next_joints = torch.from_numpy(batch.next_joints).to(self.device)
-        a = torch.from_numpy(batch.a).to(self.device)
-        prev_a = torch.from_numpy(batch.prev_a).to(self.device)
-        rew = torch.from_numpy(batch.rew).to(self.device)
+        action = torch.from_numpy(batch.action).to(self.device)
+        prev_action = torch.from_numpy(batch.prev_action).to(self.device)
+        speed = torch.from_numpy(batch.speed).to(self.device)
+        next_speed = torch.from_numpy(batch.next_speed).to(self.device)
+        reward = torch.from_numpy(batch.reward).to(self.device)
+
 
         with torch.no_grad():
-            next_sample, _, _, _ = self.actor.run_policy(params, (next_joints, next_dist, a))
+            next_sample, _, _, _ = self.actor.run_policy(params, (action, next_speed))
 
-        target_critic_arg = (next_joints, next_dist, next_sample, a)
-        critic_arg = (joints, dist, a, prev_a)
+        target_critic_arg = (next_sample, action, next_speed)
+        critic_arg = (action, prev_action, speed)
 
         with torch.no_grad():
             q_target = self.eval_critic(target_critic_arg, params,
                                         target_critic=True)
         
-        q_target = rew + (self.discount * q_target.squeeze())
+        q_target = reward + (self.discount * q_target.squeeze())
         q_target = torch.clamp(q_target, min=-100, max=100)
 
         q = self.eval_critic(critic_arg, params)
@@ -123,9 +121,9 @@ class BittleRL(hyper_params):
         critic_loss = F.mse_loss(q.squeeze(), q_target.squeeze())
 
         # Policy loss
-        sample, pdf, mu, std = self.actor.run_policy(params, (joints, dist, prev_a))
+        sample, pdf, mu, std = self.actor.run_policy(params, (prev_action, speed))
 
-        q_pi_arg = (joints, dist, sample, prev_a)
+        q_pi_arg = (sample, prev_action, speed)
         q_pi = self.eval_critic(q_pi_arg, params)
 
         entropy_term = torch.clamp(kl_divergence(pdf, self.prior), max=MAX_ENTROPY).mean()
@@ -154,16 +152,16 @@ class BittleRL(hyper_params):
             policy_output = self.log_scatter_3d(sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3],
                                                 'Dim 1', 'Dim 2', 'Dim 3', 'Dim 4')
 
-            q_output = self.log_scatter_3d(q.squeeze(), q_target.squeeze(), rew.squeeze(), next_dist.squeeze(),
+            q_output = self.log_scatter_3d(q.squeeze(), q_target.squeeze(), reward.squeeze(), next_speed.squeeze(),
                                            'Q', 'Q target', 'Reward', 'Speed')
 
-            q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), rew.squeeze(), next_dist.squeeze(),
+            q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), reward.squeeze(), next_speed.squeeze(),
                                               'Q off-policy', 'Q pi', 'Reward', 'Speed')
             
-            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(100),
+            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(200),
                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
             
-            actions_traj = self.log_scatter_3d(traj_actions[:, 0], traj_actions[:, 1], traj_actions[:, 2], np.arange(100),
+            actions_traj = self.log_scatter_3d(traj_actions[:, 0], traj_actions[:, 1], traj_actions[:, 2], np.arange(200),
                                                'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
 
             q_dist = self.log_histogram_2d(q.squeeze(), q_target.squeeze(), 'Q vals', 'Q target')
