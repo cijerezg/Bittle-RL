@@ -46,8 +46,8 @@ class Actor():
                         
         r_action = [12, 0, 0, 1]
         sample = sample.squeeze()        
-        sample = 8 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
-        offset = np.array([35, 35, 35, 35, 20, 20, 20, 20])
+        sample = 10 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
+        offset = np.array([30, 30, 30, 30, 25, 25, 25, 25])
         offset = offset[np.newaxis, :]
         sample = sample + offset
         sample = np.pad(sample, ((0, 4), (0, 0)), mode='edge') # This is to maintain the last joint position before executing new skill
@@ -150,10 +150,10 @@ class BittleRL(hyper_params):
             q_output = self.log_scatter_3d(q.squeeze(), q_target.squeeze(), reward.squeeze(), next_speed.squeeze(),
                                            'Q', 'Q target', 'Reward', 'Speed')
 
-            q_improv_pi = self.log_scatter_3d(q.squeeze(), q_pi.squeeze(), reward.squeeze(), next_speed.squeeze(),
-                                              'Q off-policy', 'Q pi', 'Reward', 'Speed')
+            q_improv_pi = self.log_scatter_3d(q_pi.squeeze() - q.squeeze(), q_pi.squeeze(), reward.squeeze(), next_speed.squeeze(),
+                                              'Q delta', 'Q pi', 'Reward', 'Speed')
             
-            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(10),
+            joints_traj = self.log_scatter_3d(traj_joints[:, 0], traj_joints[:, 1], traj_joints[:, 2], np.arange(200),
                                               'Dim 1', 'Dim 2', 'Dim 3', 'Step', torch_tensor=False)
             
             q_dist = self.log_histogram_2d(q.squeeze(), q_target.squeeze(), 'Q vals', 'Q target')

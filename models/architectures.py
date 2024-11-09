@@ -130,22 +130,19 @@ class Critic(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, device, action_range=5, hidden_dim=32):
+    def __init__(self, device, action_range=4, hidden_dim=48):
         super().__init__()
 
         # Joints and distance
-        self.embed_action = nn.Linear(8, hidden_dim)
         self.embed_prev_action = nn.Linear(8, hidden_dim)
         self.embed_speed = nn.Linear(1, hidden_dim)
 
 
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
+        self.deep_layer2 = nn.Linear(hidden_dim, hidden_dim)
 
-        self.deep_mu = nn.Linear(hidden_dim, 16)
-        self.deep_log_std = nn.Linear(hidden_dim, 16)
-
-        self.mu = nn.Linear(16, 8)
-        self.log_std = nn.Linear(16, 8)
+        self.mu = nn.Linear(hidden_dim, 8)
+        self.log_std = nn.Linear(hidden_dim, 8)
 
         self.action_range = action_range
 
@@ -163,12 +160,11 @@ class Policy(nn.Module):
         x = embedded_prev_action + speed
 
         x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
+        x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
 
-        mu = F.relu(self.deep_mu(x))
-        mu = self.mu(mu)
+        mu = self.mu(x)
 
-        log_std = F.relu(self.deep_log_std(x))
-        log_std = self.log_std(log_std)
+        log_std = self.log_std(x)
         std = torch.exp(torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX))
         
         density = Normal(mu, std)

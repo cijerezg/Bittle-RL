@@ -50,8 +50,14 @@ def main():
     prev_action = np.zeros((1, 8), dtype=np.float32)
         
     while step < MAX_STEPS:
-        dist = bittle.compute_distance()
+        dist = 0
 
+        for i in range(3):
+            measured_dist = bittle.compute_distance()
+            dist += measured_dist
+
+        dist /= 3
+        
         if step > 0:
             speed = old_dist - dist
 

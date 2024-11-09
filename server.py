@@ -43,8 +43,8 @@ config = {
     'gradient_steps': 16,
 
     'reset_frequency': 30000,
-    'delta_entropy': 8,
-    'load_pretrained_models': False,
+    'delta_entropy': 32,
+    'load_pretrained_models': True,
     'max_iterations': 20000
 }
 
@@ -91,6 +91,8 @@ def main(config=None):
         iterations = 0
         print('Starting')
         while iterations < config.max_iterations:
+            if iterations % 500 == 0:
+                pdb.set_trace()
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations, ref_params)
             
@@ -105,8 +107,8 @@ def main(config=None):
             if iterations & 10 == 0:
                 save_params(policy_folder, params['Policy'])
 
-            if iterations % 50 == 0:
-                torch.save(params, 'server_checkpoints/full_params.pt')
+            if iterations % 500 == 0:
+                torch.save(params, f'server_checkpoints/full_params_{iterations}.pt')
 
             
             

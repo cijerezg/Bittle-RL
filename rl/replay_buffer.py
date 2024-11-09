@@ -54,6 +54,10 @@ class ReplayBuffer():
 
         reward = reward + neg_vel_reward + pos_vel_reward
         reward = np.array(reward, dtype=np.float32)
+
+        fall_reward = np.where(np.abs(vel) > 1.5, -.5, 0)
+
+        reward = reward + fall_reward
         
         batch = AttrDict(action=self.action_buf[eps, idxs, :].squeeze(),
                          prev_action=self.action_buf[eps, idxs - 1, :].squeeze(),
