@@ -46,7 +46,7 @@ class Actor():
                         
         r_action = [12, 0, 0, 1]
         sample = sample.squeeze()        
-        sample = 10 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
+        sample = 8 * sample # The action range was set to -5 and 5, and the angle range -125 to 125
         offset = np.array([30, 30, 30, 30, 25, 25, 25, 25])
         offset = offset[np.newaxis, :]
         sample = sample + offset

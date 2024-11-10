@@ -38,7 +38,7 @@ config = {
 
     'batch_size': 256,
     'action_range': 4,
-    'learning_rate': 3e-4,
+    'learning_rate': 3e-3,
     'discount': 0.97,
     'gradient_steps': 16,
 
@@ -91,8 +91,6 @@ def main(config=None):
         iterations = 0
         print('Starting')
         while iterations < config.max_iterations:
-            if iterations % 500 == 0:
-                pdb.set_trace()
             transitions = load_experiences(path_exp)
             params = bittle_rl.training_iteration(params, optimizers, transitions, iterations, ref_params)
             
@@ -109,6 +107,8 @@ def main(config=None):
 
             if iterations % 500 == 0:
                 torch.save(params, f'server_checkpoints/full_params_{iterations}.pt')
+                pdb.set_trace()
+
 
             
             

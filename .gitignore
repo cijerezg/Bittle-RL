@@ -163,6 +163,5 @@ cython_debug/
 
 /wandb
 /experiences_copy
-/experiences_library
 /experiences*
 /init*
