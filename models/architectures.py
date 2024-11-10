@@ -137,11 +137,10 @@ class Policy(nn.Module):
         self.embed_prev_action = nn.Linear(8, hidden_dim)
         self.embed_speed = nn.Linear(1, hidden_dim)
 
-
         self.deep_layer1 = nn.Linear(hidden_dim, hidden_dim)
         self.deep_layer2 = nn.Linear(hidden_dim, hidden_dim)
 
-        self.deep_mu(hidden_dim, 32)
+        self.deep_mu = nn.Linear(hidden_dim, 16)
         self.mu = nn.Linear(hidden_dim, 8)
         self.log_std = nn.Linear(hidden_dim, 8)
 
