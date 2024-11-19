@@ -130,7 +130,7 @@ class Critic(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, device, action_range=5, hidden_dim=48):
+    def __init__(self, device, action_range=5, hidden_dim=24):
         super().__init__()
 
         # Joints and distance
@@ -146,20 +146,14 @@ class Policy(nn.Module):
 
         self.action_range = action_range
 
-        self.embed_prev_action_n = nn.LayerNorm(hidden_dim)
-        self.embed_speed_n = nn.LayerNorm(hidden_dim)
-        self.deep_layer1_n = nn.LayerNorm(hidden_dim)
-        self.deep_layer2_n = nn.LayerNorm(hidden_dim)
-        
-
     def forward(self, prev_action, speed):
-        embedded_prev_action = self.embed_prev_action_n(F.relu(self.embed_prev_action(prev_action)))
-        speed = self.embed_speed_n(F.relu(self.embed_speed(speed)))
+        embedded_prev_action = F.relu(self.embed_prev_action(prev_action))
+        speed = F.relu(self.embed_speed(speed))
         
         x = embedded_prev_action + speed
 
-        x = self.deep_layer1_n(F.relu(self.deep_layer1(x)))
-        x = self.deep_layer2_n(F.relu(self.deep_layer2(x)))
+        x = F.relu(self.deep_layer1(x))
+        x = F.relu(self.deep_layer2(x))
 
         mu = F.relu(self.deep_mu(x))
         mu = self.mu(x)
